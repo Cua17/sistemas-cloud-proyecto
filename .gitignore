@@ -1,0 +1,27 @@
+# Vagrant / VirtualBox
+.vagrant/
+*.box
+
+# Ansible
+*.retry
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Secrets / llaves (nunca versionar)
+*.pem
+*.key
+*_rsa
+*_rsa.pub
+secrets/
+*.env
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Presentaciones y PDFs pesados del curso (material de referencia, no del proyecto)
+*.pdf
