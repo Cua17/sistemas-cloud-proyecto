@@ -1,0 +1,55 @@
+# infra/Vagrantfile
+# Define el "centro de datos" del proyecto NubeUltima: 3 VMs independientes en una
+# red host-only con IPs ESTATICAS (requisito de la rubrica).
+#
+#   datacenter-control  192.168.56.11   (plano de control: K3s server, ingress, panel SaaS)
+#   datacenter-worker   192.168.56.12   (plano de datos: microservicios)
+#   datacenter-storage  192.168.56.13   (almacenamiento y respaldo, fuera del clúster)
+#
+# Cada VM tiene ademas una interfaz NAT (la que crea Vagrant por defecto) solo para
+# salida a internet (apt, descarga de imagenes).
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "bento/ubuntu-24.04"
+  config.vm.boot_timeout = 600
+
+  # Nombre logico => parametros de cada VM
+  nodes = {
+    "datacenter-control" => { ip: "192.168.56.11", cpus: 2, mem: 3072 },
+    "datacenter-worker"  => { ip: "192.168.56.12", cpus: 2, mem: 3072 },
+    "datacenter-storage" => { ip: "192.168.56.13", cpus: 2, mem: 2048 },
+  }
+
+  nodes.each do |name, opts|
+    config.vm.define name do |node|
+      node.vm.hostname = name
+
+      # Interfaz 2: red host-only con IP ESTATICA.
+      # Vagrant escribe esta configuracion en netplan dentro del Ubuntu (no usa DHCP).
+      node.vm.network "private_network", ip: opts[:ip], netmask: "255.255.255.0"
+
+      node.vm.provider "virtualbox" do |vb|
+        vb.name   = name
+        vb.cpus   = opts[:cpus]
+        vb.memory = opts[:mem]
+        # Agrupar las 3 VMs en la GUI de VirtualBox bajo /NubeUltima
+        vb.customize ["modifyvm", :id, "--groups", "/NubeUltima"]
+      end
+
+      # --- Provisioners (se activan en tareas posteriores del plan) ---
+      #
+      # Tarea 1.2 - configuracion base en las 3 VMs:
+      # node.vm.provision "ansible_local" do |a|
+      #   a.playbook = "ansible/common.yml"
+      #   a.install  = true
+      # end
+      #
+      # Tarea 2.1 - solo en datacenter-control:
+      # if name == "datacenter-control"
+      #   node.vm.provision "ansible_local" do |a|
+      #     a.playbook = "ansible/k3s-server.yml"
+      #   end
+      # end
+    end
+  end
+end
