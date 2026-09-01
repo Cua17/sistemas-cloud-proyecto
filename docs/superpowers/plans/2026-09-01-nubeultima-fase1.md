@@ -297,13 +297,24 @@ Vagrant escriba la configuración estática dentro del Ubuntu (en netplan), no p
       service: { name: ssh, state: restarted }
 ```
 
-- [ ] **Paso 3:** `vagrant provision`
+- [x] **Paso 3:** `vagrant provision` — hecho. `ok=7 changed=3 failed=0` en las 3 VMs.
 
-**Verificación:**
-```bash
-vagrant ssh datacenter-control -c "getent hosts datacenter-worker"   # resuelve a .12
-vagrant ssh datacenter-control -c "sudo sshd -T | grep passwordauthentication"  # 'no'
+> **Gotcha resuelto (SSH):** `PasswordAuthentication no` en un `99-*.conf` NO tomaba efecto.
+> `sshd` usa el **primer** valor que encuentra por opción, y `50-cloud-init.conf` (con
+> `PasswordAuthentication yes`) se lee antes. Solución: nombrar nuestro drop-in
+> `00-nubeultima-hardening.conf` para que gane. El `common.yml` real refleja esto y también
+> añade `chrony` (sincronización de hora, necesaria para TLS y K8s).
+
+**Verificación (hecha 2026-09-01):**
 ```
+getent hosts datacenter-worker          -> 192.168.56.12   (resolucion por nombre OK)
+sudo sshd -T | grep passwordauth        -> passwordauthentication no   (en las 3)
+                                           permitrootlogin no
+command -v iperf3 jq htop                -> instalados
+timedatectl / systemctl is-active chrony -> NTPSynchronized=yes, chrony active
+```
+Nota didáctica: al re-correr `vagrant provision`, las tareas de paquetes/hora/hosts
+salieron `ok` (no `changed`) — eso es **idempotencia**: Ansible solo cambia lo que falta.
 
 **Para entender y explicar:** Ansible es **automatización declarativa**: describís el
 *estado deseado* ("el paquete iperf3 debe estar instalado") y Ansible lo hace realidad, sin
@@ -311,10 +322,7 @@ importar el estado previo. `ansible_local` lo corre *dentro* de cada VM, así no
 instalar Ansible en Windows. El archivo `/etc/hosts` nos deja usar nombres en vez de IPs en
 comandos, aunque el direccionamiento sigue siendo 100% estático.
 
-- [ ] **Paso 4: Commit:**
-```bash
-git add infra/ && git commit -m "feat(infra): playbook common (hosts, paquetes, ssh por llave)"
-```
+- [x] **Paso 4: Commit** — hecho (`feat(infra): playbook common.yml...` en `main`).
 
 ---
 
