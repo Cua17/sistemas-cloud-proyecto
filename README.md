@@ -27,6 +27,24 @@ monitoreo de hardware y un servicio de respaldo automático verificable.
 - Diseño: [`docs/superpowers/specs/2026-08-28-plataforma-iot-ultima-milla-design.md`](docs/superpowers/specs/2026-08-28-plataforma-iot-ultima-milla-design.md)
 - Plan de implementación: [`docs/superpowers/plans/2026-09-01-nubeultima-fase1.md`](docs/superpowers/plans/2026-09-01-nubeultima-fase1.md)
 
+## Estructura del repo
+
+| Carpeta | Contenido |
+|---------|-----------|
+| `infra/` | Vagrantfile y playbooks Ansible — las 3 VMs (IaaS) |
+| `plataforma/` | Microservicios propios + manifiestos de Kubernetes (PaaS) |
+| `saas/` | Panel web del operador (SaaS) |
+| `monitoreo/` | Configuración de Prometheus + Grafana |
+| `backup/` | MinIO, Velero, restic (BaaS) |
+| `pruebas/` | Scripts de conectividad, carga y simulacro de restauración |
+| `scripts/` | Despliegue y utilidades |
+| `docs/` | Diseño, plan de implementación e informe de entrega |
+
+## Requisitos (host)
+
+VirtualBox 7.2, Vagrant 2.4.x, kubectl 1.37, helm 4.x, Git. Todo se instala con `winget`
+(ver `docs/superpowers/plans/`).
+
 ## Estado
 
 En desarrollo — Fase 0 (preparación del entorno).
@@ -34,3 +52,4 @@ En desarrollo — Fase 0 (preparación del entorno).
 ## Integrantes
 
 - _(completar)_
+

@@ -18,6 +18,12 @@ venv/
 *_rsa.pub
 secrets/
 *.env
+credentials-minio
+restic-password*
+
+# Kubeconfig (contiene certificados y token del clúster)
+infra/kubeconfig/*.yaml
+infra/kubeconfig/*.yml
 
 # Sistema
 .DS_Store
