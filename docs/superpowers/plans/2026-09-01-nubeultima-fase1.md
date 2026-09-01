@@ -355,14 +355,19 @@ echo; echo "=== IPERF3 (TCP 10s + UDP para jitter) ==="
 # Requiere: en cada destino, 'iperf3 -s -D' corriendo (lo lanza este script por ssh).
 ```
 
-- [ ] **Paso 2:** Añadir al playbook `common.yml` una tarea que deje `iperf3` como servicio
-  systemd (`iperf3 -s`), o lanzarlo manualmente en cada VM antes de la prueba.
-- [ ] **Paso 3:** Ejecutar desde la VM control:
-  `vagrant ssh datacenter-control -c "bash /vagrant/../pruebas/conectividad.sh"`
-  (ajustar la ruta; `pruebas/` se puede montar como synced folder).
+- [x] **Paso 2:** Implementación real: el script corre **desde el host** (Git Bash) y orquesta
+  todo por `vagrant ssh` — arranca/apaga los `iperf3 -s -D` él mismo, no hace falta un
+  servicio systemd ni SSH entre VMs.
+- [x] **Paso 3:** `bash pruebas/conectividad.sh` desde la raíz del repo. Guarda la salida en
+  `pruebas/resultado-conectividad.txt`.
 
-**Verificación:** el script imprime latencias < 5 ms en los 6 sentidos y throughput > 500 Mbps
-entre cada par, sin "SIN RESPUESTA". Guardar la salida en `pruebas/resultado-conectividad.txt`.
+**Verificación (hecha 2026-09-01):** matriz completa de los 6 sentidos —
+```
+ping:        0% packet loss,  RTT ~0.38-0.44 ms   (los 6)
+iperf3 TCP:  ~3.2-3.4 Gbits/sec                    (los 6)
+iperf3 UDP:  jitter 0.017-0.048 ms, sin perdida    (los 6)
+```
+Muy por encima del umbral (<5 ms, >500 Mbps). Sin errores.
 
 **Para entender y explicar:** "comunicación bidireccional estable" (rúbrica) significa que
 cualquier VM alcanza a cualquier otra, en los dos sentidos, de forma consistente. `ping`
@@ -370,10 +375,9 @@ mide **latencia**; `iperf3` mide **ancho de banda** y **jitter** (variación de 
 Presentamos esta tabla como un mini-**SLA interno** del centro de datos, que enlaza con la
 semana de QoS/SLA del curso.
 
-- [ ] **Paso 4: Commit:**
-```bash
-git add pruebas/ infra/ && git commit -m "test(infra): matriz de conectividad ping + iperf3"
-```
+- [x] **Paso 4: Commit** — hecho (`test(infra): script de conectividad...` en `main`).
+  Además se agregó `.gitattributes` para forzar LF en scripts/config (si no, fallan al
+  clonar en otra máquina: `bad interpreter: /bin/bash^M`).
 
 ---
 
