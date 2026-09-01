@@ -145,13 +145,10 @@ git add docs/ && git commit -m "docs: plan de implementacion Fase 1"
 
 **Objetivo:** carpetas creadas y una cuenta gratuita para descargar imágenes sin límite.
 
-- [ ] **Paso 1:** Crear la estructura de carpetas del mapa de archivos (vacías, con un `.gitkeep` donde haga falta).
-- [ ] **Paso 2:** Un integrante crea una cuenta gratuita en `https://hub.docker.com/`. Guardar usuario y contraseña en un gestor (no en el repo). Este será el namespace de las imágenes propias, p. ej. `docker.io/<grupo>/nubeultima-ingestion-api`.
-- [ ] **Paso 3:** Crear `README.md` en la raíz con: nombre del proyecto, integrantes, y cómo levantar todo (se irá completando).
-- [ ] **Paso 4: Commit:**
-```bash
-git add . && git commit -m "chore: estructura de carpetas del proyecto"
-```
+- [x] **Paso 1:** Estructura de carpetas creada con `.gitkeep`. Hecho.
+- [x] **Paso 2:** Cuenta de Docker Hub creada por el usuario. _(Pendiente: anotar el nombre de usuario acá.)_
+- [x] **Paso 3:** `README.md` creado.
+- [x] **Paso 4: Commit** — hecho.
 
 **Para entender y explicar:** Docker Hub es un **registro de imágenes**: un repositorio
 público de "plantillas" de contenedores. Sin cuenta, limita las descargas por hora; con
@@ -164,10 +161,10 @@ vamos a subir ahí para que el clúster K3s las pueda bajar.
 
 **Objetivo:** tener la "box" de Vagrant lista localmente.
 
-- [ ] **Paso 1:** `vagrant box add bento/ubuntu-24.04 --provider virtualbox`
-- [ ] **Paso 2:** `vagrant box list` debe mostrar `bento/ubuntu-24.04`.
+- [x] **Paso 1:** `vagrant box add bento/ubuntu-24.04 --provider virtualbox` — hecho.
+- [x] **Paso 2:** box `bento/ubuntu-24.04` v202510.26.0 añadida.
 
-**Verificación:** `vagrant box list` incluye la box.
+**Verificación:** ✅ `vagrant box list` incluye la box.
 
 **Para entender y explicar:** una *box* es una plantilla de VM ya instalada (Ubuntu Server
 mínimo). En vez de instalar el SO a mano cada vez, Vagrant clona esta plantilla. Las boxes
@@ -216,17 +213,31 @@ Vagrant.configure("2") do |config|
 end
 ```
 
-- [ ] **Paso 2:** Verificar que Windows permite el rango host-only. Crear/editar
-  `C:\ProgramData\VirtualBox\networks.conf` con la línea `* 192.168.56.0/24` si `vagrant up`
-  se queja del rango.
-- [ ] **Paso 3:** `cd infra && vagrant up` (tarda varios minutos la primera vez).
+- [x] **Paso 2:** Verificado: VirtualBox 7.2 permite `192.168.56.0/24` por defecto (rango
+  `192.168.56.0/21`), no hizo falta tocar `networks.conf`.
+- [x] **Paso 3:** `vagrant up`. **Bloqueo encontrado y resuelto** — ver recuadro abajo.
 
-**Verificación:**
-```bash
-vagrant status                       # las 3 en "running"
-vagrant ssh datacenter-control -c "ip -4 addr show | grep 192.168.56.11"
-vagrant ssh datacenter-worker  -c "ip -4 addr show | grep 192.168.56.12"
-vagrant ssh datacenter-storage -c "ip -4 addr show | grep 192.168.56.13"
+> ⚠️ **Gotcha resuelto (2026-09-01): el hipervisor de Windows bloqueaba a VirtualBox.**
+> El primer `vagrant up` creó las VMs pero **no booteaban** (kernel congelado a los ~8 s).
+> Causa raíz en `VBox.log`: `AMD-V is not available` → VirtualBox caía al backend lento NEM.
+> Windows 11 tenía activados **Integridad de memoria** (Aislamiento del núcleo) + el
+> hipervisor (VBS), que se quedan con AMD-V. Solución (como Administrador, requiere reinicio):
+> 1. Seguridad de Windows → Aislamiento del núcleo → **Integridad de memoria: Desactivado**
+> 2. `bcdedit /set hypervisorlaunchtype off`
+> 3. `dism /online /disable-feature /featurename:VirtualMachinePlatform /norestart`
+> 4. `dism /online /disable-feature /featurename:HypervisorPlatform /norestart`
+> 5. Reiniciar. Verificar: `Get-CimInstance Win32_ComputerSystem` → `HypervisorPresent: False`
+>
+> **Costo:** WSL2, Docker Desktop y Windows Sandbox dejan de funcionar hasta revertirlo.
+> Para el proyecto no importa (Docker corre dentro de las VMs). Va a la sección de
+> Implementación/Limitaciones del informe.
+
+**Verificación (hecha 2026-09-01, tras el fix):**
+```
+vagrant status  ->  las 3 en "running"
+control:  eth1 = 192.168.56.11    worker: eth1 = 192.168.56.12    storage: eth1 = 192.168.56.13
+hostnames correctos; ping bidireccional entre las 3, 0% pérdida, <1 ms
+La interfaz host-only se llama eth1 (importante para --flannel-iface en la Tarea 2.1).
 ```
 
 **Para entender y explicar:** cada VM tiene 2 tarjetas de red virtuales. La primera (NAT) le
@@ -234,10 +245,7 @@ da internet de salida. La segunda (host-only) es una red privada entre las VMs y
 como un switch aislado; ahí les ponemos las IPs fijas. `private_network ip:` hace que
 Vagrant escriba la configuración estática dentro del Ubuntu (en netplan), no por DHCP.
 
-- [ ] **Paso 4: Commit:**
-```bash
-git add infra/Vagrantfile && git commit -m "feat(infra): 3 VMs con IPs estaticas en red host-only"
-```
+- [x] **Paso 4: Commit** — hecho (`feat(infra): 3 VMs con IPs estaticas...`, commit en `main`).
 
 ---
 
