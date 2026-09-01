@@ -13,7 +13,7 @@ sobre VM1+VM2 corre un clúster K3s (PaaS) con microservicios propios en Python 
 + InfluxDB; un panel web es el SaaS; VM3 (fuera del clúster) hospeda MinIO y es el destino
 de los respaldos de Velero + restic (BaaS). Monitoreo de hardware con Prometheus + Grafana.
 
-**Stack:** VirtualBox 7.1, Vagrant, Ansible (modo `ansible_local`), Ubuntu Server 24.04 LTS,
+**Stack:** VirtualBox 7.2, Vagrant 2.4.9, Ansible (modo `ansible_local`), Ubuntu Server 24.04 LTS,
 K3s, Helm, Eclipse Mosquitto, InfluxDB 2.x OSS, Python 3.12 + FastAPI + paho-mqtt,
 kube-prometheus-stack, Velero, restic, MinIO.
 
@@ -117,17 +117,17 @@ Sistemas Cloud/
 
 **Objetivo:** tener VirtualBox, Vagrant, Git y un editor listos en Windows.
 
-- [ ] **Paso 1:** Descargar e instalar **VirtualBox 7.1.x** desde `https://www.virtualbox.org/wiki/Downloads` (paquete "Windows hosts"). NO instalar el Extension Pack.
-- [ ] **Paso 2:** Descargar e instalar **Vagrant** desde `https://developer.hashicorp.com/vagrant/install` (Windows AMD64). Reiniciar la sesión de Windows.
-- [ ] **Paso 3:** Instalar **Git** desde `https://git-scm.com/download/win` y **VS Code** desde `https://code.visualstudio.com/`.
-- [ ] **Paso 4:** Instalar **kubectl** y **helm** para Windows:
-  - kubectl: `https://kubernetes.io/docs/tasks/tools/install-kubectl-windows/`
-  - helm: `https://helm.sh/docs/intro/install/` (o `winget install Helm.Helm`)
+- [x] **Paso 1:** Instalar **VirtualBox** — `winget install --id Oracle.VirtualBox -e`. NO instalar el Extension Pack. (Instalado: 7.2.16)
+- [x] **Paso 2:** Instalar **Vagrant** — `winget install --id Hashicorp.Vagrant -e`. (Instalado: 2.4.9)
+- [x] **Paso 3:** Git ya estaba (2.50.1). Instalar **VS Code** si se quiere: `winget install --id Microsoft.VisualStudioCode -e`.
+- [x] **Paso 4:** Instalar **kubectl** y **helm** — `winget install --id Kubernetes.kubectl -e` y `winget install --id Helm.Helm -e`. (Instalados: kubectl 1.37.0, helm 4.2.4)
 
-**Verificación:** en PowerShell, cada comando devuelve una versión:
-```powershell
-VBoxManage --version ; vagrant --version ; git --version ; kubectl version --client ; helm version
-```
+**Verificación (hecha 2026-09-01):** todas devuelven versión —
+`VBoxManage 7.2.16r174877`, `Vagrant 2.4.9`, `git 2.50.1`, `kubectl v1.37.0`, `helm v4.2.4`.
+
+> **Nota de versiones:** salieron más nuevas que las del plan original (VirtualBox 7.2 en
+> vez de 7.1, Helm 4.x en vez de 3.15). Sin impacto esperado; si Vagrant avisa que la
+> versión de VirtualBox es "untested", igual funciona. Se confirma en la Tarea 1.1.
 
 **Para entender y explicar:** VirtualBox es el **hipervisor tipo 2** (corre sobre Windows,
 no sobre el hardware directo). Vagrant no virtualiza nada: es un "control remoto" que le

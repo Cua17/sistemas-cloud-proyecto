@@ -83,7 +83,7 @@ Edge Computing y modelo CAPEX→OPEX.
                           │  MQTT (protocolo real de NB-IoT/LoRaWAN)
                           ▼
   ═══════════════════════════════════════════════════════════════════════
-  IaaS — CENTRO DE DATOS   (Oracle VirtualBox 7.1 sobre Windows 11 Home)
+  IaaS — CENTRO DE DATOS   (Oracle VirtualBox 7.2 sobre Windows 11 Home)
   ═══════════════════════════════════════════════════════════════════════
    Red host-only  192.168.56.0/24   ·   IPs estáticas   ·   SSH por llave
    Segunda interfaz NAT en cada VM (solo salida a internet para apt/imágenes)
@@ -182,12 +182,12 @@ Todo software libre / gratuito para uso educativo. Descargar siempre desde el si
 
 | Capa | Herramienta | Versión objetivo | Fuente oficial | Licencia |
 |------|-------------|------------------|----------------|----------|
-| Hipervisor | Oracle VirtualBox | 7.1.x | virtualbox.org | GPLv3 (base; sin Extension Pack) |
+| Hipervisor | Oracle VirtualBox | 7.2.x | virtualbox.org | GPLv3 (base; sin Extension Pack) |
 | VMs como código | Vagrant | 2.4.x | developer.hashicorp.com | BUSL-1.1 (libre para uso educativo) |
 | Configuración | Ansible | 2.16+ | ansible.com (Red Hat) | GPLv3 |
 | SO invitado | Ubuntu Server LTS | 24.04 (box `bento/ubuntu-24.04`) | ubuntu.com / app.vagrantup.com | Libre |
 | Orquestador | K3s | v1.30.x | k3s.io (SUSE/Rancher) | Apache 2.0 |
-| Gestor de paquetes K8s | Helm | 3.15+ | helm.sh | Apache 2.0 |
+| Gestor de paquetes K8s | Helm | 4.x | helm.sh | Apache 2.0 |
 | Broker MQTT | Eclipse Mosquitto | 2.x (imagen oficial) | mosquitto.org | EPL/EDL |
 | Base series de tiempo | InfluxDB OSS | 2.7.x (imagen oficial) | influxdata.com | MIT / Apache 2.0 |
 | Microservicios propios | Python + FastAPI + paho-mqtt | Python 3.12 | fastapi.tiangolo.com | MIT |
