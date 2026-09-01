@@ -386,11 +386,14 @@ semana de QoS/SLA del curso.
 **Objetivo:** demostrar que todo el centro de datos se reconstruye desde cero sin tocar nada
 a mano.
 
-- [ ] **Paso 1:** `cd infra && vagrant destroy -f && vagrant up`
-- [ ] **Paso 2:** Correr `pruebas/conectividad.sh` de nuevo; debe pasar igual.
-- [ ] **Paso 3:** Grabar un video corto de este proceso (sirve como evidencia de "las VMs compilan").
+- [x] **Paso 1:** `vagrant destroy -f && vagrant up` — hecho 2026-09-01. Tiempos:
+  destruir 20 s · crear+bootear+provisionar las 3 = **8 min 16 s**. `failed=0` en las 3.
+- [x] **Paso 2:** `pruebas/conectividad.sh` re-ejecutado → mismo resultado: 0% pérdida en los
+  6 sentidos, RTT ~0.3 ms, iperf3 TCP ~4.6-5.5 Gbits/s, jitter <0.03 ms.
+- [ ] **Paso 3:** _(Video pendiente — el usuario lo grabará si el profe lo pide.)_
 
-**Verificación:** el ciclo `destroy` + `up` + prueba de conectividad pasa sin intervención.
+**Verificación:** ✅ el ciclo `destroy` + `up` + prueba de conectividad pasó sin intervención
+manual. **FASE 1 (IaaS) COMPLETA.**
 
 **Para entender y explicar:** esta es la prueba de fuego de la Infraestructura como Código:
 si se puede destruir y recrear con un comando, la infraestructura es *reproducible* y
