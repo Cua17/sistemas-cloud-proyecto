@@ -1,0 +1,19 @@
+# Normaliza finales de linea. Los scripts y archivos de config que se usan DENTRO
+# de las VMs Linux deben tener LF, si no fallan ("bad interpreter: /bin/bash^M").
+* text=auto eol=lf
+
+*.sh        text eol=lf
+*.yml       text eol=lf
+*.yaml      text eol=lf
+*.py        text eol=lf
+Vagrantfile text eol=lf
+*.conf      text eol=lf
+
+# Scripts propios de Windows: mantener CRLF
+*.ps1  text eol=crlf
+*.bat  text eol=crlf
+*.cmd  text eol=crlf
+
+# Binarios: sin conversion
+*.png  binary
+*.box  binary
