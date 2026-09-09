@@ -11,6 +11,38 @@
 
 ---
 
+## ⚠️ ACTUALIZACIÓN 2026-09-09 — Pivote a Raspberry Pi
+
+El catedrático confirmó (verbalmente, en clase) que **es obligatorio usar una Raspberry Pi**
+como host físico. El virtualizador queda a elección → se usa **KVM** (el hipervisor nativo
+de Linux). Esto cambia la **capa de abajo**, no la idea del proyecto.
+
+**Hardware real:** Raspberry Pi 4 Model B, **4 GB** de RAM (no 8), microSD Kingston Canvas
+Select Plus 128 GB A1, arranque desde la microSD (no hay SSD), disipador pasivo, WiFi.
+
+**Cambios respecto al diseño original (laptop + VirtualBox):**
+
+| Aspecto | Diseño original | Ahora (Raspberry Pi) |
+|---|---|---|
+| Host físico | Laptop Windows | Raspberry Pi 4 (4 GB), Raspberry Pi OS Lite 64-bit (Debian 13) |
+| Hipervisor | VirtualBox | **KVM + libvirt + QEMU** |
+| Creación de VMs | Vagrant | **`virt-install` + cloud-init** (`infra/kvm/crear-vms.sh`) |
+| SO de las VMs | Ubuntu 24.04 x86_64 | **Debian 13 ARM64** (imagen cloud), IPs estáticas 192.168.100.11/12/13 |
+| Red | host-only VirtualBox 192.168.56.0/24 | **red libvirt NAT** `nubeultima` 192.168.100.0/24 |
+| PaaS / orquestador | K3s (Kubernetes) | **Docker Swarm** (más liviano; entra en 4 GB) |
+| Base de datos | InfluxDB | **SQLite** (dentro del `ingestion-api`; ahorra ~400 MB) |
+| Microservicios propios | 4 (simulador, ingestión, anomalías, dashboard) | **3** (las reglas de anomalía van dentro del `ingestion-api`) |
+| Monitoreo de HW | kube-prometheus-stack | **Netdata** (un binario, dashboard en tiempo real, nativo ARM) |
+| Respaldo (BaaS) | MinIO + Velero + restic | **MinIO + restic** (Velero es solo-K8s y pesado) |
+| Protección del disco | — | `journald` a RAM, zram (ya viene), simulador on-demand |
+
+**Se conserva:** el escenario (telemetría IoT de última milla, 4 zonas), el diseño lógico
+IaaS→PaaS→SaaS→BaaS, los playbooks de Ansible (`common.yml`), el script de conectividad,
+la estructura del informe. El resto de este documento describe la versión original; las
+secciones de arquitectura, stack e implementación se leen con la tabla de arriba aplicada.
+
+---
+
 ## 1. Resumen ejecutivo
 
 Se construye, en una sola laptop, una réplica a pequeña escala del sistema cloud que un
