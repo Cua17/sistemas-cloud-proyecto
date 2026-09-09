@@ -1,0 +1,15 @@
+<!-- Red virtual del centro de datos NubeUltima.
+     Las 3 VMs viven en 192.168.100.0/24 detras de la Raspberry Pi (NAT).
+     La Pi es la puerta de enlace (192.168.100.1).
+     Las VMs usan IPs ESTATICAS (.11/.12/.13) via cloud-init; el rango DHCP
+     de abajo queda solo como reserva y NO se solapa con las estaticas. -->
+<network>
+  <name>nubeultima</name>
+  <forward mode='nat'/>
+  <bridge name='virbr-nube' stp='on' delay='0'/>
+  <ip address='192.168.100.1' netmask='255.255.255.0'>
+    <dhcp>
+      <range start='192.168.100.200' end='192.168.100.250'/>
+    </dhcp>
+  </ip>
+</network>
