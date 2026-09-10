@@ -436,18 +436,17 @@ Cualquiera del grupo puede levantar el proyecto idéntico en su máquina.
 > Orquestador confirmado: **K3s** (Kubernetes ligero). Las tareas 2.1–2.4 de abajo
 > (K3s sobre Vagrant/x86) son referencia. La Fase 2 real:
 >
-> | Paso | Qué | Archivo | Nota |
+> | Paso | Qué | Archivo | Estado |
 > |---|---|---|---|
-> | **2a** | Re-dimensionar las VMs para K3s (control 1400 MB, worker 1200 MB, storage 512 MB) y recrear | `infra/kvm/vms.conf` | Ajuste a 4 GB. Vigilar RAM/zram de cerca |
-> | **2b** | Instalar **K3s server** en `nubeultima-control` (`--disable traefik --disable metrics-server --flannel-iface enp1s0 --node-ip 192.168.100.11`) | `infra/ansible/k3s-server.yml` | El "cerebro" del clúster |
-> | **2c** | Unir `nubeultima-worker` como **K3s agent** | `infra/ansible/k3s-agent.yml` | El "músculo" |
-> | **2d** | `kubectl` desde la Pi (kubeconfig con `server: https://192.168.100.11:6443`) · namespaces | `infra/k3s/` | `kubectl get nodes` → 2 Ready |
-> | **2e** | Escribir los 3 microservicios en Python: `device-simulator`, `ingestion-api` (FastAPI + SQLite + reglas de anomalía), `dashboard` (SaaS) | `plataforma/`, `saas/` | Probar en local con `docker compose` primero |
-> | **2f** | Broker MQTT (Mosquitto). Base de datos = **SQLite** dentro del `ingestion-api` (no InfluxDB) | `plataforma/k8s/` | |
-> | **2g** | Construir las imágenes **ARM64** en la Pi · publicarlas en Docker Hub (cuenta del grupo) | `plataforma/*/Dockerfile` | `docker buildx` o build nativo en la Pi |
-> | **2h** | Desplegar todo en K3s (`kubectl apply -f plataforma/k8s/`) · Ingress simple (nginx o NodePort) | `plataforma/k8s/` | |
-> | **2i** | Reenvío de puertos en la Pi (`nftables`): laptop → `nubeultima:8080` → panel SaaS de la VM | `infra/pi-host/` | Para ver el panel desde el navegador de la laptop |
-> | **2j** | Verificar de punta a punta: simulador → MQTT → ingestión → SQLite → panel con datos y alertas | | |
+> | **2a** | Re-dimensionar las VMs (control 1400 / worker 1200 / storage 512 MB) + zram | `infra/kvm/vms.conf`, `infra/ansible/vm-tuning.yml` | ✅ 2026-09-10 |
+> | **2b/2c** | **K3s** server en control + agent en worker (recortado) | `infra/ansible/k3s.yml` | ✅ 2 nodos `Ready` |
+> | **2d** | `kubectl` en la Pi (`~/.kube/config`) | (en `k3s.yml`) | ✅ `kubectl get nodes` OK |
+> | **2e** | 3 microservicios Python: `device-simulator`, `ingestion-api` (FastAPI + SQLite + `rules.py`), `dashboard` | `plataforma/`, `saas/` | ✅ escritos + tests |
+> | **2f** | Broker MQTT (Mosquitto) · base de datos = **SQLite** en el `ingestion-api` | `plataforma/k8s/10-mosquitto.yaml`, `20-*.yaml` | ✅ |
+> | **2g** | Construir imágenes **ARM64** en la Pi → importar a containerd de los 2 nodos (sin Docker Hub) | `infra/k3s/construir-imagenes.sh` | ✅ 3 imágenes |
+> | **2h** | Desplegar en K3s (`kubectl apply`) · dashboard por **NodePort** 30080 | `infra/k3s/desplegar.sh` | ✅ 4 pods `Running` |
+> | **2i** | Publicar el panel: `socat` en la Pi (8080 → VM). nftables no sirvió (firewall de libvirt) | `infra/pi-host/03-port-forward.sh` | ✅ servicio systemd |
+> | **2j** | Verificar de punta a punta: simulador → MQTT → ingestión → SQLite → panel con datos y alertas | | ✅ desde la laptop: `http://192.168.0.51:8080/` HTTP 200, datos y alertas reales |
 >
 > **Plan B (si la Pi de 4 GB no aguanta K3s en la demo):** cambiar a **Docker Swarm** — los
 > Dockerfiles y el `docker-compose.yml` de desarrollo se reutilizan, solo cambian los
