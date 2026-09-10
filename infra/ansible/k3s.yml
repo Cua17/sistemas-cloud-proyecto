@@ -1,0 +1,104 @@
+---
+# infra/ansible/k3s.yml
+# Instala un clúster K3s (Kubernetes ligero) de 2 nodos:
+#   - server (plano de control) en nubeultima-control
+#   - agent  (nodo de trabajo)  en nubeultima-worker
+# nubeultima-storage queda FUERA del clúster (sera el almacenamiento del BaaS).
+#
+# El instalador (https://get.k3s.io) es el oficial de K3s (SUSE/Rancher, proyecto CNCF).
+#
+# Uso (en la Pi):
+#   ansible-playbook -i infra/ansible/inventory.ini infra/ansible/k3s.yml
+
+# ---------------------------------------------------------------- PLAY 1: server
+- name: K3s server (plano de control)
+  hosts: nubeultima-control
+  become: true
+  vars:
+    iface: enp1s0
+    k3s_version: v1.31.5+k3s1
+  tasks:
+    - name: Instalar K3s server (recortado para 4 GB)
+      ansible.builtin.shell: |
+        curl -sfL https://get.k3s.io | \
+          INSTALL_K3S_VERSION={{ k3s_version }} \
+          INSTALL_K3S_EXEC="server \
+            --node-ip=192.168.100.11 \
+            --advertise-address=192.168.100.11 \
+            --flannel-iface={{ iface }} \
+            --tls-san=192.168.100.11 \
+            --write-kubeconfig-mode=644 \
+            --disable=traefik \
+            --disable=servicelb \
+            --disable=metrics-server" \
+          sh -
+      args:
+        creates: /usr/local/bin/k3s
+
+    - name: Esperar a que el nodo este Ready
+      ansible.builtin.command: k3s kubectl wait --for=condition=Ready node/nubeultima-control --timeout=180s
+      changed_when: false
+      retries: 6
+      delay: 15
+      register: r
+      until: r.rc == 0
+
+    - name: Leer el token de union
+      ansible.builtin.slurp:
+        src: /var/lib/rancher/k3s/server/node-token
+      register: node_token
+
+    - name: Guardar el token para el play del agent
+      ansible.builtin.set_fact:
+        k3s_token: "{{ node_token.content | b64decode | trim }}"
+
+    - name: Copiar el kubeconfig a la Pi (para usar kubectl desde el host)
+      ansible.builtin.fetch:
+        src: /etc/rancher/k3s/k3s.yaml
+        dest: /tmp/k3s-kubeconfig.yaml
+        flat: true
+
+# ---------------------------------------------------------------- PLAY 2: agent
+- name: K3s agent (nodo de trabajo)
+  hosts: nubeultima-worker
+  become: true
+  vars:
+    iface: enp1s0
+    k3s_version: v1.31.5+k3s1
+    server_token: "{{ hostvars['nubeultima-control']['k3s_token'] }}"
+  tasks:
+    - name: Instalar K3s agent y unirlo al server
+      ansible.builtin.shell: |
+        curl -sfL https://get.k3s.io | \
+          INSTALL_K3S_VERSION={{ k3s_version }} \
+          K3S_URL=https://192.168.100.11:6443 \
+          K3S_TOKEN={{ server_token }} \
+          INSTALL_K3S_EXEC="agent \
+            --node-ip=192.168.100.12 \
+            --flannel-iface={{ iface }}" \
+          sh -
+      args:
+        creates: /usr/local/bin/k3s
+
+# ---------------------------------------------------------------- PLAY 3: kubeconfig en la Pi
+- name: Dejar kubectl listo en la Pi
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: Crear ~/.kube
+      ansible.builtin.file:
+        path: "{{ ansible_env.HOME }}/.kube"
+        state: directory
+        mode: "0700"
+
+    - name: Instalar el kubeconfig apuntando a la IP de la VM control
+      ansible.builtin.copy:
+        src: /tmp/k3s-kubeconfig.yaml
+        dest: "{{ ansible_env.HOME }}/.kube/config"
+        mode: "0600"
+
+    - name: Reemplazar 127.0.0.1 por la IP real del server
+      ansible.builtin.replace:
+        path: "{{ ansible_env.HOME }}/.kube/config"
+        regexp: 'https://127\.0\.0\.1:6443'
+        replace: 'https://192.168.100.11:6443'

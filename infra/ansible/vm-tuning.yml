@@ -1,0 +1,68 @@
+---
+# infra/ansible/vm-tuning.yml
+# Ajustes de memoria y disco para las VMs, pensados para una Raspberry Pi 4 de 4 GB.
+#   - zram: swap comprimido en RAM (colchon contra OOM sin tocar el disco)
+#   - journald a RAM (menos escrituras al qcow2)
+#   - apagar servicios que no usamos en un servidor headless
+
+- name: Tuning de las VMs para poca RAM
+  hosts: centro_datos
+  become: true
+
+  tasks:
+    - name: Instalar systemd-zram-generator
+      ansible.builtin.apt:
+        name: systemd-zram-generator
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Configurar zram (50% de la RAM, algoritmo zstd)
+      ansible.builtin.copy:
+        dest: /etc/systemd/zram-generator.conf
+        content: |
+          [zram0]
+          zram-size = ram / 2
+          compression-algorithm = zstd
+      notify: Activar zram
+
+    - name: Logs de journald a RAM
+      ansible.builtin.copy:
+        dest: /etc/systemd/journald.conf.d/00-volatile.conf
+        content: |
+          [Journal]
+          Storage=volatile
+          RuntimeMaxUse=32M
+      notify: Reiniciar journald
+
+    - name: Bajar el "swappiness" (usar RAM antes que swap)
+      ansible.posix.sysctl:
+        name: vm.swappiness
+        value: "20"
+        sysctl_set: true
+        state: present
+      # si el modulo ansible.posix no esta, cae al de abajo
+      ignore_errors: true
+
+    - name: Fallback swappiness sin ansible.posix
+      ansible.builtin.copy:
+        dest: /etc/sysctl.d/99-nubeultima.conf
+        content: "vm.swappiness = 20\n"
+      notify: Aplicar sysctl
+
+  handlers:
+    - name: Activar zram
+      ansible.builtin.systemd:
+        name: /dev/zram0
+        state: started
+        daemon_reload: true
+      ignore_errors: true
+
+    - name: Reiniciar journald
+      ansible.builtin.service:
+        name: systemd-journald
+        state: restarted
+
+    - name: Aplicar sysctl
+      ansible.builtin.command: sysctl --system
+      changed_when: false
