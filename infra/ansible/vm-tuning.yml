@@ -25,6 +25,12 @@
           zram-size = ram / 2
           compression-algorithm = zstd
 
+    - name: Crear el directorio de configuracion de journald
+      ansible.builtin.file:
+        path: /etc/systemd/journald.conf.d
+        state: directory
+        mode: "0755"
+
     - name: Logs de journald a RAM
       ansible.builtin.copy:
         dest: /etc/systemd/journald.conf.d/00-volatile.conf
