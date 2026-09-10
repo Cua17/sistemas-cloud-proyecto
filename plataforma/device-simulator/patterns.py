@@ -6,11 +6,13 @@ plausible para un medidor de luz/agua o un sensor de aire, con curva diaria + ru
 import math
 import random
 
-# Config por tipo de dispositivo: unidad, valor base y amplitud de la variacion diaria.
+# Config por tipo de dispositivo. 'base' es el valor de fondo (madrugada); 'amp' es
+# cuanto sube en el pico del dia. Asi de noche los valores son bajos (nadie consume)
+# y las reglas de anomalia solo se disparan con anomalias de verdad.
 TIPOS = {
-    "luz":  {"unidad": "kWh",   "base": 0.35, "amp": 0.35},
-    "agua": {"unidad": "L/min", "base": 5.0,  "amp": 5.0},
-    "aire": {"unidad": "PM2.5", "base": 14.0, "amp": 9.0},
+    "luz":  {"unidad": "kWh",   "base": 0.10, "amp": 0.9},
+    "agua": {"unidad": "L/min", "base": 0.30, "amp": 9.0},
+    "aire": {"unidad": "PM2.5", "base": 10.0, "amp": 12.0},
 }
 
 
@@ -23,7 +25,7 @@ def base_reading(tipo: str, hour: float) -> float:
     """Lectura normal para ese tipo de dispositivo a esa hora."""
     cfg = TIPOS[tipo]
     valor = cfg["base"] + cfg["amp"] * daily_factor(hour)
-    valor += random.gauss(0, cfg["amp"] * 0.06)
+    valor += random.gauss(0, cfg["amp"] * 0.04)
     return max(0.0, round(valor, 2))
 
 

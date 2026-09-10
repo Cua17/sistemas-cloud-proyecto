@@ -34,10 +34,21 @@ def construir_dispositivos():
     return devs
 
 
+def conectar(cli):
+    """Reintenta hasta que el broker este disponible (el pod puede arrancar antes)."""
+    while True:
+        try:
+            cli.connect(MQTT_HOST, MQTT_PORT, keepalive=60)
+            return
+        except OSError as e:
+            print(f"simulador: broker no disponible ({e}), reintento en 5s", flush=True)
+            time.sleep(5)
+
+
 def main():
     devices = construir_dispositivos()
     cli = mqtt.Client(client_id="device-simulator")
-    cli.connect(MQTT_HOST, MQTT_PORT, keepalive=60)
+    conectar(cli)
     cli.loop_start()
     print(f"simulador: {len(devices)} dispositivos en {len(ZONAS)} zonas, "
           f"cada {INTERVALO}s -> {MQTT_HOST}:{MQTT_PORT}", flush=True)
