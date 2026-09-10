@@ -12,14 +12,42 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 
 INGESTION_API = os.getenv("INGESTION_API", "http://ingestion-api:8000")
+PROMETHEUS = os.getenv("PROMETHEUS_URL", "http://192.168.100.1:9090")
 
 app = FastAPI(title="NubeUltima - Panel del operador")
 templates = Jinja2Templates(directory="app/templates")
+
+# Consultas PromQL para el monitoreo del hardware, una por metrica.
+PROMQL = {
+    "cpu":   '100 - (avg by (maquina) (rate(node_cpu_seconds_total{mode="idle"}[2m])) * 100)',
+    "ram":   '(1 - avg by (maquina) (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100',
+    "disco": '(1 - avg by (maquina) (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"})) * 100',
+    "temp":  'avg by (maquina) (node_hwmon_temp_celsius) or avg by (maquina) (node_thermal_zone_temp)',
+}
 
 
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+
+@app.get("/api/infra")
+async def infra():
+    """Monitoreo del hardware: CPU/RAM/disco/temperatura de la Pi y las 3 VMs."""
+    out: dict = {}
+    async with httpx.AsyncClient(timeout=5) as client:
+        for metrica, q in PROMQL.items():
+            try:
+                r = await client.get(f"{PROMETHEUS}/api/v1/query", params={"query": q})
+                for res in r.json()["data"]["result"]:
+                    m = res["metric"].get("maquina", "?")
+                    out.setdefault(m, {})[metrica] = round(float(res["value"][1]), 1)
+            except Exception:
+                pass
+    return out
+
+
+# /api/baas y el resto de /api/* van al ingestion-api via el proxy de abajo.
 
 
 @app.get("/", response_class=HTMLResponse)

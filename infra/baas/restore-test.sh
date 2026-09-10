@@ -36,9 +36,10 @@ else
   fi
 fi
 
-echo "{\"resultado\":\"$RES\",\"detalle\":\"$DETALLE\",\"filas_restauradas\":$FILAS,\"fecha\":\"$(date -u +%FT%TZ)\"}" \
-  | sudo tee "$ESTADO"
-mc cp "$ESTADO" local/nubeultima-backups/restore-test.json 2>/dev/null || true
+JSON="{\"resultado\":\"$RES\",\"detalle\":\"$DETALLE\",\"filas_restauradas\":$FILAS,\"fecha\":\"$(date -u +%FT%TZ)\"}"
+echo "$JSON" | sudo tee "$ESTADO"
+kubectl -n nubeultima exec deploy/ingestion-api -- \
+  sqlite3 /data/nubeultima.db "INSERT OR REPLACE INTO baas_status(k,v) VALUES('restore_test', '$JSON')" 2>/dev/null || true
 
 echo "[$(date -u +%FT%TZ)] restore-test: $RES - $DETALLE"
 [ "$RES" = "OK" ]

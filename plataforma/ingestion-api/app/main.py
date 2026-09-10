@@ -98,6 +98,22 @@ def readings(zona: str | None = None, tipo: str | None = None, minutos: int = 60
     return [dict(x) for x in rows]
 
 
+@app.get("/baas")
+def baas():
+    """Estado del servicio de respaldo (lo escriben los scripts de BaaS por SQLite)."""
+    import json as _json
+    conn = get_conn()
+    rows = conn.execute("SELECT k, v FROM baas_status").fetchall()
+    conn.close()
+    out = {}
+    for r in rows:
+        try:
+            out[r["k"]] = _json.loads(r["v"])
+        except Exception:
+            out[r["k"]] = r["v"]
+    return out
+
+
 @app.get("/alerts")
 def alerts(minutos: int = 120):
     conn = get_conn()

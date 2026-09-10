@@ -46,11 +46,12 @@ restic snapshots >/dev/null 2>&1 || restic init
 restic backup --tag auto --host nubeultima-pi "$STAGING"
 restic forget --tag auto --keep-last 8 --keep-daily 5 --prune
 
-# 5. Estado para el panel / la evidencia
+# 5. Estado para el panel (se guarda en la base del ingestion-api, tabla baas_status)
 LAST=$(restic snapshots --json --last | python3 -c 'import sys,json;s=json.load(sys.stdin);print(s[-1]["time"] if s else "nunca")')
 SIZE=$(restic stats --mode raw-data --json | python3 -c 'import sys,json;print(round(json.load(sys.stdin)["total_size"]/1e6,1))')
-echo "{\"ultimo_backup\":\"$LAST\",\"tamano_mb\":$SIZE,\"generado\":\"$(date -u +%FT%TZ)\"}" \
-  > "$STAGING/estado-baas.json"
-mc cp "$STAGING/estado-baas.json" local/nubeultima-backups/estado-baas.json 2>/dev/null || true
+N=$(restic snapshots --json | python3 -c 'import sys,json;print(len(json.load(sys.stdin)))')
+JSON="{\"ultimo\":\"$LAST\",\"tamano_mb\":$SIZE,\"snapshots\":$N,\"generado\":\"$(date -u +%FT%TZ)\"}"
+kubectl -n nubeultima exec deploy/ingestion-api -- \
+  sqlite3 /data/nubeultima.db "INSERT OR REPLACE INTO baas_status(k,v) VALUES('backup', '$JSON')" 2>/dev/null || true
 
-echo "[$(date -u +%FT%TZ)] === respaldo OK (ultimo: $LAST, ${SIZE} MB) ==="
+echo "[$(date -u +%FT%TZ)] === respaldo OK (ultimo: $LAST, ${SIZE} MB, $N snapshots) ==="

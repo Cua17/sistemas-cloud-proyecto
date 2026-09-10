@@ -18,6 +18,7 @@ spec:
           imagePullPolicy: IfNotPresent
           env:
             - { name: INGESTION_API, value: "http://ingestion-api:8000" }
+            - { name: PROMETHEUS_URL, value: "http://192.168.100.1:9090" }
           ports:
             - containerPort: 8080
           readinessProbe:

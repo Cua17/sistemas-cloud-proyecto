@@ -60,6 +60,18 @@
   </section>
 
   <section>
+    <h2>Infraestructura · hardware (Prometheus)</h2>
+    <table><thead><tr><th>Máquina</th><th>CPU</th><th>RAM</th><th>Disco</th><th>Temp</th></tr></thead>
+      <tbody id="infra"><tr><td colspan="5" class="vacio">Cargando…</td></tr></tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Respaldo · BaaS</h2>
+    <table><tbody id="baas"><tr><td class="vacio">Cargando…</td></tr></tbody></table>
+  </section>
+
+  <section>
     <h2>Dispositivos</h2>
     <table><thead><tr><th>ID</th><th>Zona</th><th>Tipo</th><th>Última lectura</th><th>Valor</th></tr></thead>
       <tbody id="devices"><tr><td colspan="5" class="vacio">Esperando datos…</td></tr></tbody>
@@ -75,8 +87,9 @@ async function get(path){ const r = await fetch('/api/'+path); if(!r.ok) throw n
 
 async function refrescar(){
   try{
-    const [stats, zonas, alertas, devices] = await Promise.all(
-      [get('stats'), get('zonas'), get('alerts?minutos=30'), get('devices')]);
+    const [stats, zonas, alertas, devices, infra, baas] = await Promise.all(
+      [get('stats'), get('zonas'), get('alerts?minutos=30'), get('devices'),
+       get('infra').catch(()=>({})), get('baas').catch(()=>({}))]);
 
     $('#stat').innerHTML =
       `<span>Lecturas: <b>${stats.lecturas}</b></span>
@@ -96,6 +109,19 @@ async function refrescar(){
       <tr><td>${a.regla}</td><td>${a.device_id}</td><td>${a.zona}</td>
           <td>${a.detalle}</td><td>${fmtHora(a.ts)}</td></tr>`).join('')
       : '<tr><td colspan="5" class="vacio">Sin alertas</td></tr>';
+
+    const orden = ['raspberry-pi','vm-control','vm-worker','vm-storage'];
+    const filas = Object.keys(infra).sort((a,b)=>orden.indexOf(a)-orden.indexOf(b));
+    $('#infra').innerHTML = filas.length ? filas.map(m => {
+      const x = infra[m];
+      return `<tr><td>${m}</td><td>${x.cpu??'–'} %</td><td>${x.ram??'–'} %</td>
+        <td>${x.disco??'–'} %</td><td>${x.temp??'–'} °C</td></tr>`;
+    }).join('') : '<tr><td colspan="5" class="vacio">Prometheus no responde</td></tr>';
+
+    const b = baas.backup, rt = baas.restore_test;
+    $('#baas').innerHTML = `
+      <tr><td>Último respaldo</td><td>${b ? new Date(b.ultimo).toLocaleString('es-GT')+` · ${b.tamano_mb} MB · ${b.snapshots} snapshots` : 'sin datos'}</td></tr>
+      <tr><td>Última verificación</td><td>${rt ? `<span class="badge ${rt.resultado==='OK'?'ok':'crit'}">${rt.resultado}</span> ${rt.detalle} · ${new Date(rt.fecha).toLocaleString('es-GT')}` : 'sin datos'}</td></tr>`;
 
     $('#devices').innerHTML = devices.length ? devices.map(d => `
       <tr><td>${d.device_id}</td><td>${d.zona}</td><td>${d.tipo}</td>

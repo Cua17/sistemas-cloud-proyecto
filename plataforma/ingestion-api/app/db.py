@@ -42,6 +42,11 @@ def init_db() -> None:
             valor     REAL
         );
         CREATE INDEX IF NOT EXISTS ix_alerts_ts ON alerts(ts);
+
+        CREATE TABLE IF NOT EXISTS baas_status (
+            k TEXT PRIMARY KEY,
+            v TEXT NOT NULL
+        );
         """
     )
     conn.commit()
