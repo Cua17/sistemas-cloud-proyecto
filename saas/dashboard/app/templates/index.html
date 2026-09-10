@@ -10,24 +10,26 @@
     --ok:#2ea043; --warn:#d29922; --crit:#f85149; --accent:#388bfd;
   }
   *{box-sizing:border-box}
-  body{margin:0;font:14px/1.5 system-ui,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--txt)}
-  header{padding:14px 20px;border-bottom:1px solid var(--line);display:flex;align-items:baseline;gap:12px}
-  header h1{margin:0;font-size:22px;font-weight:700;letter-spacing:-.01em}
-  header .sub{color:var(--muted);font-size:13px}
-  header .live{margin-left:auto;color:var(--muted);font-size:12px}
-  main{padding:20px;display:grid;gap:20px;max-width:1100px;margin:0 auto}
+  /* Escala tipografica: 28 titulo / 16 encabezados de tarjeta / 14 cuerpo / 11 etiquetas.
+     Panel de operaciones denso: la jerarquia tambien viene de peso, color y mayusculas. */
+  body{margin:0;font:14px/1.55 system-ui,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--txt)}
+  header{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;align-items:baseline;gap:12px}
+  header h1{margin:0;font-size:28px;font-weight:700;letter-spacing:-.02em}
+  header .sub{color:var(--muted);font-size:14px}
+  header .live{margin-left:auto;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+  main{padding:24px 20px;display:grid;gap:28px;max-width:1100px;margin:0 auto}
   .zonas{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}
-  .zona{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px}
-  .zona h3{margin:0 0 6px;font-size:15px}
-  .zona .meta{color:var(--muted);font-size:12px}
+  .zona{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px}
+  .zona h3{margin:0 0 4px;font-size:16px;font-weight:600}
+  .zona .meta{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.05em}
   .zona.alerta{border-color:var(--crit);box-shadow:0 0 0 1px var(--crit) inset}
-  .badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:600}
+  .badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
   .badge.ok{background:rgba(46,160,67,.15);color:var(--ok)}
   .badge.crit{background:rgba(248,81,73,.15);color:var(--crit)}
-  section h2{font-size:14px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:0 0 10px}
+  section h2{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 12px;font-weight:700}
   table{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
-  th,td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--line);font-size:13px}
-  th{color:var(--muted);font-weight:600}
+  th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);font-size:14px}
+  th{color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.04em}
   tr:last-child td{border-bottom:0}
   .alertas td:first-child{color:var(--crit);font-weight:600}
   .vacio{color:var(--muted);padding:12px}
