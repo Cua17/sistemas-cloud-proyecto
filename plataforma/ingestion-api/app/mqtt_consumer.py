@@ -43,6 +43,15 @@ def _on_message(client, userdata, msg):
         )
         _hist[r["device_id"]].append(r["valor"])
         for regla, detalle in evaluar(r, list(_hist[r["device_id"]])):
+            # De-duplicacion: una alerta por episodio. Si ya hay una del mismo
+            # dispositivo y regla en los ultimos 10 min, no se repite.
+            ya = conn.execute(
+                "SELECT 1 FROM alerts WHERE device_id=? AND regla=? "
+                "AND ts >= datetime('now','-10 minutes') LIMIT 1",
+                (r["device_id"], regla),
+            ).fetchone()
+            if ya:
+                continue
             conn.execute(
                 "INSERT INTO alerts(ts,device_id,zona,tipo,regla,detalle,valor) "
                 "VALUES(?,?,?,?,?,?,?)",
