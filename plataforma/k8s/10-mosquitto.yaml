@@ -1,0 +1,55 @@
+# Broker MQTT - el "cartero" de la ultima milla.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mosquitto-config
+  namespace: nubeultima
+data:
+  mosquitto.conf: |
+    listener 1883
+    allow_anonymous true
+    persistence false
+    log_dest stdout
+    log_type warning
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mqtt-broker
+  namespace: nubeultima
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: mqtt-broker }
+  template:
+    metadata:
+      labels: { app: mqtt-broker }
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: nubeultima-worker
+      containers:
+        - name: mosquitto
+          image: eclipse-mosquitto:2.0
+          args: ["mosquitto", "-c", "/mosquitto/config/mosquitto.conf"]
+          ports:
+            - containerPort: 1883
+          volumeMounts:
+            - name: config
+              mountPath: /mosquitto/config
+          resources:
+            requests: { memory: "16Mi", cpu: "10m" }
+            limits:   { memory: "48Mi" }
+      volumes:
+        - name: config
+          configMap: { name: mosquitto-config }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mqtt-broker
+  namespace: nubeultima
+spec:
+  selector: { app: mqtt-broker }
+  ports:
+    - port: 1883
+      targetPort: 1883

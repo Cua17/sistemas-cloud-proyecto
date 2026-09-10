@@ -1,0 +1,41 @@
+# El SaaS: panel del operador. Se publica con NodePort (no usamos ingress para ahorrar RAM).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dashboard
+  namespace: nubeultima
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: dashboard }
+  template:
+    metadata:
+      labels: { app: dashboard }
+    spec:
+      containers:
+        - name: dashboard
+          image: nubeultima/dashboard:0.1.0
+          imagePullPolicy: IfNotPresent
+          env:
+            - { name: INGESTION_API, value: "http://ingestion-api:8000" }
+          ports:
+            - containerPort: 8080
+          readinessProbe:
+            httpGet: { path: /health, port: 8080 }
+            initialDelaySeconds: 5
+          resources:
+            requests: { memory: "64Mi", cpu: "30m" }
+            limits:   { memory: "128Mi" }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dashboard
+  namespace: nubeultima
+spec:
+  type: NodePort
+  selector: { app: dashboard }
+  ports:
+    - port: 8080
+      targetPort: 8080
+      nodePort: 30080

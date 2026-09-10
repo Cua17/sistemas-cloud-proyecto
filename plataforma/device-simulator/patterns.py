@@ -1,0 +1,38 @@
+"""Patrones de telemetria realista para los dispositivos simulados.
+
+Funciones puras (faciles de probar): dada una hora del dia, devuelven un valor
+plausible para un medidor de luz/agua o un sensor de aire, con curva diaria + ruido.
+"""
+import math
+import random
+
+# Config por tipo de dispositivo: unidad, valor base y amplitud de la variacion diaria.
+TIPOS = {
+    "luz":  {"unidad": "kWh",   "base": 0.35, "amp": 0.35},
+    "agua": {"unidad": "L/min", "base": 5.0,  "amp": 5.0},
+    "aire": {"unidad": "PM2.5", "base": 14.0, "amp": 9.0},
+}
+
+
+def daily_factor(hour: float) -> float:
+    """Factor 0..1 con minimo alrededor de las 04:00 y maximo alrededor de las 16:00."""
+    return 0.5 + 0.5 * math.sin((hour - 10) / 24 * 2 * math.pi)
+
+
+def base_reading(tipo: str, hour: float) -> float:
+    """Lectura normal para ese tipo de dispositivo a esa hora."""
+    cfg = TIPOS[tipo]
+    valor = cfg["base"] + cfg["amp"] * daily_factor(hour)
+    valor += random.gauss(0, cfg["amp"] * 0.06)
+    return max(0.0, round(valor, 2))
+
+
+def inject_anomaly(tipo: str, valor: float, kind: str) -> float:
+    """Deforma una lectura para simular una anomalia."""
+    if kind == "fuga" and tipo == "agua":
+        return round(max(valor, 4.5), 2)          # flujo que no baja
+    if kind == "pico" and tipo == "luz":
+        return round(valor * 4.0 + 1.0, 2)        # pico de consumo
+    if kind == "contaminacion" and tipo == "aire":
+        return round(valor + 40.0, 2)             # episodio de mala calidad de aire
+    return valor

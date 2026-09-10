@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NubeÚltima · Panel del operador</title>
+<style>
+  :root{
+    --bg:#0f1720; --panel:#17222e; --line:#26333f; --txt:#e6edf3; --muted:#8b98a5;
+    --ok:#2ea043; --warn:#d29922; --crit:#f85149; --accent:#388bfd;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font:14px/1.5 system-ui,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--txt)}
+  header{padding:14px 20px;border-bottom:1px solid var(--line);display:flex;align-items:baseline;gap:12px}
+  header h1{margin:0;font-size:18px}
+  header .sub{color:var(--muted);font-size:13px}
+  header .live{margin-left:auto;color:var(--muted);font-size:12px}
+  main{padding:20px;display:grid;gap:20px;max-width:1100px;margin:0 auto}
+  .zonas{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}
+  .zona{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px}
+  .zona h3{margin:0 0 6px;font-size:15px}
+  .zona .meta{color:var(--muted);font-size:12px}
+  .zona.alerta{border-color:var(--crit);box-shadow:0 0 0 1px var(--crit) inset}
+  .badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:600}
+  .badge.ok{background:rgba(46,160,67,.15);color:var(--ok)}
+  .badge.crit{background:rgba(248,81,73,.15);color:var(--crit)}
+  section h2{font-size:14px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:0 0 10px}
+  table{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  th,td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--line);font-size:13px}
+  th{color:var(--muted);font-weight:600}
+  tr:last-child td{border-bottom:0}
+  .alertas td:first-child{color:var(--crit);font-weight:600}
+  .vacio{color:var(--muted);padding:12px}
+  .stat{display:flex;gap:24px;color:var(--muted);font-size:13px}
+  .stat b{color:var(--txt)}
+</style>
+</head>
+<body>
+<header>
+  <h1>NubeÚltima</h1>
+  <span class="sub">Panel del operador · Municipio inteligente</span>
+  <span class="live" id="live">actualizando…</span>
+</header>
+
+<main>
+  <div class="stat" id="stat"></div>
+
+  <section>
+    <h2>Zonas de la ciudad</h2>
+    <div class="zonas" id="zonas"><div class="vacio">Esperando datos…</div></div>
+  </section>
+
+  <section>
+    <h2>Alertas activas (últimas 2 h)</h2>
+    <table class="alertas"><thead><tr><th>Regla</th><th>Dispositivo</th><th>Zona</th><th>Detalle</th><th>Hora</th></tr></thead>
+      <tbody id="alertas"><tr><td colspan="5" class="vacio">Sin alertas</td></tr></tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Dispositivos</h2>
+    <table><thead><tr><th>ID</th><th>Zona</th><th>Tipo</th><th>Última lectura</th><th>Valor</th></tr></thead>
+      <tbody id="devices"><tr><td colspan="5" class="vacio">Esperando datos…</td></tr></tbody>
+    </table>
+  </section>
+</main>
+
+<script>
+const $ = s => document.querySelector(s);
+const fmtHora = ts => { try { return new Date(ts).toLocaleTimeString('es-GT'); } catch { return ts; } };
+
+async function get(path){ const r = await fetch('/api/'+path); if(!r.ok) throw new Error(path); return r.json(); }
+
+async function refrescar(){
+  try{
+    const [stats, zonas, alertas, devices] = await Promise.all(
+      [get('stats'), get('zonas'), get('alerts?minutos=120'), get('devices')]);
+
+    $('#stat').innerHTML =
+      `<span>Lecturas: <b>${stats.lecturas}</b></span>
+       <span>Alertas: <b>${stats.alertas}</b></span>
+       <span>Dispositivos: <b>${stats.dispositivos}</b></span>`;
+
+    $('#zonas').innerHTML = zonas.length ? zonas.map(z => `
+      <div class="zona ${z.alertas>0?'alerta':''}">
+        <h3>${z.zona}</h3>
+        <div class="meta">${z.dispositivos} dispositivos</div>
+        <div style="margin-top:8px">${z.alertas>0
+          ? `<span class="badge crit">${z.alertas} alerta(s)</span>`
+          : `<span class="badge ok">OK</span>`}</div>
+      </div>`).join('') : '<div class="vacio">Sin zonas</div>';
+
+    $('#alertas').innerHTML = alertas.length ? alertas.map(a => `
+      <tr><td>${a.regla}</td><td>${a.device_id}</td><td>${a.zona}</td>
+          <td>${a.detalle}</td><td>${fmtHora(a.ts)}</td></tr>`).join('')
+      : '<tr><td colspan="5" class="vacio">Sin alertas</td></tr>';
+
+    $('#devices').innerHTML = devices.length ? devices.map(d => `
+      <tr><td>${d.device_id}</td><td>${d.zona}</td><td>${d.tipo}</td>
+          <td>${fmtHora(d.ultima_lectura)}</td>
+          <td>${d.ultimo_valor} ${d.unidad||''}</td></tr>`).join('')
+      : '<tr><td colspan="5" class="vacio">Esperando datos…</td></tr>';
+
+    $('#live').textContent = 'actualizado ' + new Date().toLocaleTimeString('es-GT');
+  }catch(e){
+    $('#live').textContent = 'error de conexión';
+  }
+}
+refrescar();
+setInterval(refrescar, 10000);
+</script>
+</body>
+</html>
