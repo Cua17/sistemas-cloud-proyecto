@@ -1,0 +1,27 @@
+=== EVIDENCIA FASE 3 ===
+--- Prometheus: targets ---
+raspberry-pi up
+vm-control up
+vm-worker up
+vm-storage up
+
+--- monitoreo HW (via panel) ---
+{"vm-worker":{"cpu":13.3,"ram":42.3,"disco":28.6},"raspberry-pi":{"cpu":22.8,"ram":84.4,"disco":16.3,"temp":54.0},"vm-storage":{"cpu":3.6,"ram":34.9,"disco":25.1},"vm-control":{"cpu":9.1,"ram":49.7,"disco":30.5}}
+
+--- BaaS: snapshots restic ---
+
+--- estado BaaS (panel) ---
+{"backup":{"ultimo":"2026-09-09T22:20:08.192375176-06:00","tamano_mb":0.6,"snapshots":7,"generado":"2026-09-10T04:20:12Z"},"restore_test":{"resultado":"OK","detalle":"base integra, 5532 lecturas restauradas","filas_restauradas":5532,"fecha":"2026-09-10T04:20:15Z"}}
+
+--- NetworkPolicies ---
+NAME                            POD-SELECTOR        AGE
+dashboard-publico               app=dashboard       113m
+default-deny-ingress            <none>              113m
+ingestion-api-desde-dashboard   app=ingestion-api   113m
+mqtt-broker-desde-namespace     app=mqtt-broker     113m
+
+--- timers ---
+NEXT                            LEFT LAST                              PASSED UNIT                          ACTIVATES
+Wed 2026-09-09 22:47:38 CST    26min Wed 2026-09-09 22:17:38 CST 3min 48s ago nubeultima-backup.timer       nubeultima-backup.service
+Thu 2026-09-10 02:13:15 CST 3h 51min Wed 2026-09-09 20:13:15 CST  2h 8min ago nubeultima-restore-test.timer nubeultima-restore-test.service
+
