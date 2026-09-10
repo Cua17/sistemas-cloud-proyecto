@@ -43,6 +43,7 @@ sudo tee /etc/systemd/system/nubeultima-backup.service >/dev/null <<'EOF'
 Description=NubeUltima - respaldo BaaS
 [Service]
 Type=oneshot
+Environment=KUBECONFIG=/home/pi/.kube/config
 ExecStart=/usr/local/bin/nubeultima-backup
 EOF
 sudo tee /etc/systemd/system/nubeultima-backup.timer >/dev/null <<'EOF'
@@ -60,6 +61,7 @@ sudo tee /etc/systemd/system/nubeultima-restore-test.service >/dev/null <<'EOF'
 Description=NubeUltima - verificacion de respaldos
 [Service]
 Type=oneshot
+Environment=KUBECONFIG=/home/pi/.kube/config
 ExecStart=/usr/local/bin/nubeultima-restore-test
 EOF
 sudo tee /etc/systemd/system/nubeultima-restore-test.timer >/dev/null <<'EOF'

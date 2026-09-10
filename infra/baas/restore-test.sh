@@ -6,6 +6,7 @@
 # Escribe el resultado (OK/FALLO + fecha) en un archivo de estado y en MinIO.
 set -uo pipefail
 
+export KUBECONFIG=/home/pi/.kube/config
 export RESTIC_REPOSITORY="s3:http://192.168.100.13:9000/nubeultima-backups"
 export RESTIC_PASSWORD_FILE=/etc/nubeultima/restic-password
 export AWS_ACCESS_KEY_ID="$(cat /etc/nubeultima/minio-access)"
