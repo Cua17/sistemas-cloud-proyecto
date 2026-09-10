@@ -39,8 +39,10 @@ fi
 
 JSON="{\"resultado\":\"$RES\",\"detalle\":\"$DETALLE\",\"filas_restauradas\":$FILAS,\"fecha\":\"$(date -u +%FT%TZ)\"}"
 echo "$JSON" | sudo tee "$ESTADO"
-kubectl -n nubeultima exec deploy/ingestion-api -- \
-  sqlite3 /data/nubeultima.db "INSERT OR REPLACE INTO baas_status(k,v) VALUES('restore_test', '$JSON')" 2>/dev/null || true
+kubectl -n nubeultima exec deploy/ingestion-api -- python -c "
+import sqlite3; c=sqlite3.connect('/data/nubeultima.db')
+c.execute('INSERT OR REPLACE INTO baas_status(k,v) VALUES(?,?)', ('restore_test', '''$JSON'''))
+c.commit()" 2>/dev/null || true
 
 echo "[$(date -u +%FT%TZ)] restore-test: $RES - $DETALLE"
 [ "$RES" = "OK" ]

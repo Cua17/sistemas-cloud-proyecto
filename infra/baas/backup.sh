@@ -52,7 +52,9 @@ LAST=$(restic snapshots --json --last | python3 -c 'import sys,json;s=json.load(
 SIZE=$(restic stats --mode raw-data --json | python3 -c 'import sys,json;print(round(json.load(sys.stdin)["total_size"]/1e6,1))')
 N=$(restic snapshots --json | python3 -c 'import sys,json;print(len(json.load(sys.stdin)))')
 JSON="{\"ultimo\":\"$LAST\",\"tamano_mb\":$SIZE,\"snapshots\":$N,\"generado\":\"$(date -u +%FT%TZ)\"}"
-kubectl -n nubeultima exec deploy/ingestion-api -- \
-  sqlite3 /data/nubeultima.db "INSERT OR REPLACE INTO baas_status(k,v) VALUES('backup', '$JSON')" 2>/dev/null || true
+kubectl -n nubeultima exec deploy/ingestion-api -- python -c "
+import sqlite3; c=sqlite3.connect('/data/nubeultima.db')
+c.execute('INSERT OR REPLACE INTO baas_status(k,v) VALUES(?,?)', ('backup', '''$JSON'''))
+c.commit()" 2>/dev/null || true
 
 echo "[$(date -u +%FT%TZ)] === respaldo OK (ultimo: $LAST, ${SIZE} MB, $N snapshots) ==="
