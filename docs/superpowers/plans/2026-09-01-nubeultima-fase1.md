@@ -454,8 +454,32 @@ Cualquiera del grupo puede levantar el proyecto idéntico en su máquina.
 >
 > **Recordatorio:** preguntar al profe si se puede usar una Pi de 8 GB (haría K3s cómodo).
 
+---
+
+# FASE 3 — Monitoreo + BaaS + Seguridad + Informe
+
+> ## ✅ COMPLETA (2026-09-10) — Raspberry Pi
+>
+> | Paso | Qué | Archivo | Estado |
+> |---|---|---|---|
+> | **3a** | `node_exporter` en la Pi + las 3 VMs; **Prometheus** en la Pi (retención 6h), scrapea las 4 | `infra/ansible/monitoreo-vms.yml`, `infra/pi-host/04-monitoreo.sh` | ✅ 4 targets `up` |
+> | **3b** | El panel del operador integra el **monitoreo de HW** (`/api/infra` → Prometheus) y el estado del BaaS | `saas/dashboard/` | ✅ secciones "Infraestructura" y "Respaldo" |
+> | **3c** | **MinIO** en la VM storage (servicio de respaldo, S3), `MemoryMax=380M` | `infra/ansible/minio.yml` | ✅ bucket `nubeultima-backups` |
+> | **3d** | **restic** en la Pi + timers systemd: respaldo cada 30 min, verificación cada 6 h | `infra/baas/backup.sh`, `restore-test.sh`, `infra/pi-host/05-baas.sh` | ✅ 7 snapshots |
+> | **3e** | **Verificación de respaldos** (rúbrica): restore-test restaura y valida el SQLite | `infra/baas/restore-test.sh` | ✅ "5532 lecturas restauradas, base íntegra" |
+> | **3f** | Seguridad: **NetworkPolicies** deny-by-default + caminos permitidos; SSH por llave; cifrado restic | `plataforma/k8s/01-networkpolicies.yaml` | ✅ pod ajeno → ingestion-api BLOQUEADO |
+> | **3g** | Self-healing demostrado: borrar el pod de `ingestion-api` → vuelve en ~12 s, datos intactos (PVC) | — | ✅ RTO ~12 s |
+> | **3h** | Simulacro de desastre (destruir + recrear un nodo) | `pruebas/simulacro-desastre.md` | 📝 guion listo, ejecutar con el grupo |
+> | **3i** | Borrador del informe escrito (8 secciones del esquema) | `docs/informe/informe.md` | 📝 borrador con `[[...]]` para el grupo |
+>
+> **Dedup de alertas:** una alerta por episodio (ventana 10 min), no una por lectura.
+>
+> **Descartado:** Grafana (343 MB, muy pesado para 4 GB). Prometheus solo cumple el requisito.
+>
+> **PROYECTO NUBEÚLTIMA — COMPLETO.** Evidencias en `docs/informe/evidencias/`.
+
 <details>
-<summary>Tareas 2.1–2.4 originales (K3s sobre Vagrant/x86) — referencia</summary>
+<summary>Fase 3 vieja / Tareas 2.1–2.4 originales (K3s sobre Vagrant/x86) — referencia</summary>
 
 ### Tarea 2.1: Instalar K3s server en VM1
 
