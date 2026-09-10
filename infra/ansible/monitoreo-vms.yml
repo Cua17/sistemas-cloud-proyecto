@@ -1,0 +1,28 @@
+---
+# infra/ansible/monitoreo-vms.yml
+# Instala el exportador de metricas de hardware (node_exporter) en las 3 VMs.
+# Prometheus (en la Pi) las lee para el monitoreo del "HW utilizado".
+
+- name: node_exporter en las VMs
+  hosts: centro_datos
+  become: true
+  tasks:
+    - name: Instalar prometheus-node-exporter
+      ansible.builtin.apt:
+        name: prometheus-node-exporter
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Habilitar y arrancar node_exporter
+      ansible.builtin.service:
+        name: prometheus-node-exporter
+        state: started
+        enabled: true
+
+    - name: Verificar que expone metricas
+      ansible.builtin.uri:
+        url: "http://localhost:9100/metrics"
+        return_content: false
+      register: r
+      failed_when: r.status != 200
