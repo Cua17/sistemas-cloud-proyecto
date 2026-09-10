@@ -429,9 +429,34 @@ Cualquiera del grupo puede levantar el proyecto idéntico en su máquina.
 
 ---
 
-# FASE 2 — PaaS: plataforma de orquestación (K3s)
+# FASE 2 — PaaS + Aplicación + SaaS
 
-*Responsable principal: integrante 2 (Plataforma / PaaS).*
+> ## Reescrita 2026-09-09 para Raspberry Pi + K3s + ARM64
+>
+> Orquestador confirmado: **K3s** (Kubernetes ligero). Las tareas 2.1–2.4 de abajo
+> (K3s sobre Vagrant/x86) son referencia. La Fase 2 real:
+>
+> | Paso | Qué | Archivo | Nota |
+> |---|---|---|---|
+> | **2a** | Re-dimensionar las VMs para K3s (control 1400 MB, worker 1200 MB, storage 512 MB) y recrear | `infra/kvm/vms.conf` | Ajuste a 4 GB. Vigilar RAM/zram de cerca |
+> | **2b** | Instalar **K3s server** en `nubeultima-control` (`--disable traefik --disable metrics-server --flannel-iface enp1s0 --node-ip 192.168.100.11`) | `infra/ansible/k3s-server.yml` | El "cerebro" del clúster |
+> | **2c** | Unir `nubeultima-worker` como **K3s agent** | `infra/ansible/k3s-agent.yml` | El "músculo" |
+> | **2d** | `kubectl` desde la Pi (kubeconfig con `server: https://192.168.100.11:6443`) · namespaces | `infra/k3s/` | `kubectl get nodes` → 2 Ready |
+> | **2e** | Escribir los 3 microservicios en Python: `device-simulator`, `ingestion-api` (FastAPI + SQLite + reglas de anomalía), `dashboard` (SaaS) | `plataforma/`, `saas/` | Probar en local con `docker compose` primero |
+> | **2f** | Broker MQTT (Mosquitto). Base de datos = **SQLite** dentro del `ingestion-api` (no InfluxDB) | `plataforma/k8s/` | |
+> | **2g** | Construir las imágenes **ARM64** en la Pi · publicarlas en Docker Hub (cuenta del grupo) | `plataforma/*/Dockerfile` | `docker buildx` o build nativo en la Pi |
+> | **2h** | Desplegar todo en K3s (`kubectl apply -f plataforma/k8s/`) · Ingress simple (nginx o NodePort) | `plataforma/k8s/` | |
+> | **2i** | Reenvío de puertos en la Pi (`nftables`): laptop → `nubeultima:8080` → panel SaaS de la VM | `infra/pi-host/` | Para ver el panel desde el navegador de la laptop |
+> | **2j** | Verificar de punta a punta: simulador → MQTT → ingestión → SQLite → panel con datos y alertas | | |
+>
+> **Plan B (si la Pi de 4 GB no aguanta K3s en la demo):** cambiar a **Docker Swarm** — los
+> Dockerfiles y el `docker-compose.yml` de desarrollo se reutilizan, solo cambian los
+> manifiestos por un `docker-stack.yml`.
+>
+> **Recordatorio:** preguntar al profe si se puede usar una Pi de 8 GB (haría K3s cómodo).
+
+<details>
+<summary>Tareas 2.1–2.4 originales (K3s sobre Vagrant/x86) — referencia</summary>
 
 ### Tarea 2.1: Instalar K3s server en VM1
 
@@ -549,9 +574,14 @@ git add plataforma/k8s/ && git commit -m "feat(paas): namespaces + verificacion 
 nodos automáticamente y el ingress responde desde el host. Capturas de `kubectl get nodes`
 y del navegador.
 
+</details>
+
 ---
 
-# FASE 3 — La aplicación (microservicios propios)
+# FASE 3 (vieja) — La aplicación (microservicios propios)
+
+> Fusionada dentro de la nueva Fase 2 (pasos 2e–2j). Se mantiene abajo como referencia
+> del código de los microservicios.
 
 *Responsable principal: integrante 3 (Aplicación). Se desarrolla y prueba localmente con
 `docker-compose` antes de llevarlo al clúster.*

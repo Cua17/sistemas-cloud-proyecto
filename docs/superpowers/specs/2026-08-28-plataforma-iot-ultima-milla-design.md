@@ -29,7 +29,7 @@ Select Plus 128 GB A1, arranque desde la microSD (no hay SSD), disipador pasivo,
 | Creación de VMs | Vagrant | **`virt-install` + cloud-init** (`infra/kvm/crear-vms.sh`) |
 | SO de las VMs | Ubuntu 24.04 x86_64 | **Debian 13 ARM64** (imagen cloud), IPs estáticas 192.168.100.11/12/13 |
 | Red | host-only VirtualBox 192.168.56.0/24 | **red libvirt NAT** `nubeultima` 192.168.100.0/24 |
-| PaaS / orquestador | K3s (Kubernetes) | **Docker Swarm** (más liviano; entra en 4 GB) |
+| PaaS / orquestador | K3s (Kubernetes) | **K3s** — Kubernetes ligero, recortado (`--disable traefik,metrics-server`). Server en la VM control, agent en la VM worker. Ajustado para 4 GB; **plan B = Docker Swarm** si la Pi no aguanta en la demo |
 | Base de datos | InfluxDB | **SQLite** (dentro del `ingestion-api`; ahorra ~400 MB) |
 | Microservicios propios | 4 (simulador, ingestión, anomalías, dashboard) | **3** (las reglas de anomalía van dentro del `ingestion-api`) |
 | Monitoreo de HW | kube-prometheus-stack | **Netdata** (un binario, dashboard en tiempo real, nativo ARM) |
