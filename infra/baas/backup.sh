@@ -21,7 +21,7 @@ export AWS_SECRET_ACCESS_KEY="$(cat $AWS_SECRET_ACCESS_KEY_FILE)"
 STAGING=/var/tmp/nubeultima-backup
 REPO=/home/pi/nubeultima
 KEY="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i /home/pi/.ssh/id_ed25519"
-mkdir -p "$STAGING"
+rm -rf "$STAGING"; mkdir -p "$STAGING"   # siempre desde cero (no arrastrar archivos viejos)
 
 echo "[$(date -u +%FT%TZ)] === respaldo NubeUltima ==="
 
