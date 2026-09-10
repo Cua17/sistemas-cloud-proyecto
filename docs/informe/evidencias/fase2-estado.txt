@@ -1,0 +1,22 @@
+=== EVIDENCIA FASE 2 ===
+--- nodos K3s ---
+nubeultima-control   Ready   control-plane,master   49m   v1.31.5+k3s1   192.168.100.11   <none>   Debian GNU/Linux 13 (trixie)   6.12.107+deb13-cloud-arm64   containerd://1.7.23-k3s2
+nubeultima-worker    Ready   <none>                 48m   v1.31.5+k3s1   192.168.100.12   <none>   Debian GNU/Linux 13 (trixie)   6.12.107+deb13-cloud-arm64   containerd://1.7.23-k3s2
+
+--- pods ---
+dashboard-68fd6cf68c-8qccs          1/1   Running   0     2m38s   10.42.2.11   nubeultima-worker   <none>   <none>
+device-simulator-54fbf9d5fb-jwngg   1/1   Running   0     2m37s   10.42.2.12   nubeultima-worker   <none>   <none>
+ingestion-api-749ccfc776-q8m7v      1/1   Running   0     2m34s   10.42.2.13   nubeultima-worker   <none>   <none>
+mqtt-broker-d8b8747f7-99llt         1/1   Running   0     39m     10.42.2.2    nubeultima-worker   <none>   <none>
+
+--- services ---
+dashboard       NodePort    10.43.208.7    <none>   8080:30080/TCP   39m
+ingestion-api   ClusterIP   10.43.242.51   <none>   8000/TCP         39m
+mqtt-broker     ClusterIP   10.43.84.135   <none>   1883/TCP         39m
+
+--- imagenes en containerd ---
+
+--- RAM Pi / temp ---
+               total        used        free      shared  buff/cache   available
+Mem:           3.7Gi       3.1Gi        57Mi        11Mi       638Mi       609Mi
+temp=52.5'C
