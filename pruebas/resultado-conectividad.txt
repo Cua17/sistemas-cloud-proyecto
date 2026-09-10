@@ -1,34 +1,34 @@
 ==================================================================
  NubeUltima - Prueba de conectividad del centro de datos
- Fecha: 2026-09-01 23:55:15 UTC
+ Fecha: 2026-09-10 00:02:31 UTC   (host: nubeultima)
 ==================================================================
 
 ### 1. LATENCIA (ping, 10 paquetes por sentido) ###
 
-ORIGEN                 DESTINO                PERDIDA  RTT prom    
-----------------------------------------------------------------------
-datacenter-control     datacenter-worker      0% packet loss 0.328 ms    
-datacenter-control     datacenter-storage     0% packet loss 0.379 ms    
-datacenter-worker      datacenter-control     0% packet loss 0.289 ms    
-datacenter-worker      datacenter-storage     0% packet loss 0.380 ms    
-datacenter-storage     datacenter-control     0% packet loss 0.315 ms    
-datacenter-storage     datacenter-worker      0% packet loss 0.311 ms    
+ORIGEN     DESTINO    PERDIDA          RTT prom    
+----------------------------------------------------
+control    worker     0% packet loss   0.781 ms    
+control    storage    0% packet loss   0.507 ms    
+worker     control    0% packet loss   0.755 ms    
+worker     storage    0% packet loss   0.589 ms    
+storage    control    0% packet loss   0.637 ms    
+storage    worker     0% packet loss   0.416 ms    
 
 ### 2. ANCHO DE BANDA y JITTER (iperf3) ###
 
 -- Arrancando servidores iperf3 (daemon) en las 3 VMs --
 
-ORIGEN                 DESTINO                TCP Bitrate    UDP Jitter
-----------------------------------------------------------------------
-datacenter-control     datacenter-worker      4.59 Gbits/sec 0.025 ms  
-datacenter-control     datacenter-storage     4.77 Gbits/sec 0.014 ms  
-datacenter-worker      datacenter-control     5.12 Gbits/sec 0.016 ms  
-datacenter-worker      datacenter-storage     5.47 Gbits/sec 0.029 ms  
-datacenter-storage     datacenter-control     5.39 Gbits/sec 0.013 ms  
-datacenter-storage     datacenter-worker      5.14 Gbits/sec 0.018 ms  
+ORIGEN     DESTINO    TCP Bitrate      UDP Jitter  
+----------------------------------------------------
+control    worker     2006 Mbits/sec   0.082 ms    
+control    storage    2083 Mbits/sec   0.036 ms    
+worker     control    1978 Mbits/sec   0.011 ms    
+worker     storage    1882 Mbits/sec   0.008 ms    
+storage    control    1895 Mbits/sec   0.003 ms    
+storage    worker     1870 Mbits/sec   0.008 ms    
 
 -- Apagando servidores iperf3 --
 
 ==================================================================
- Fin. Resultado guardado en: /c/Users/jdcua/OneDrive/Universidad/2026 - Ciclo 2/Sistemas Cloud/pruebas/resultado-conectividad.txt
+ Fin. Resultado guardado en: /home/pi/nubeultima/pruebas/resultado-conectividad.txt
 ==================================================================

@@ -112,11 +112,12 @@ done
 
 echo
 echo "== 2. Esperando a que las 3 VMs respondan por SSH =="
+SSHOPTS="-o BatchMode=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -o ConnectTimeout=3"
 for IP in 192.168.100.11 192.168.100.12 192.168.100.13; do
+  ssh-keygen -R "$IP" >/dev/null 2>&1 || true   # limpiar llave vieja si la VM se recreo
   printf "  %s " "$IP"
   for i in $(seq 1 60); do
-    if ssh -o BatchMode=yes -o StrictHostKeyChecking=no -o ConnectTimeout=3 \
-        pi@"$IP" true 2>/dev/null; then
+    if ssh $SSHOPTS pi@"$IP" true 2>/dev/null; then
       echo "OK"; break
     fi
     printf "."; sleep 5

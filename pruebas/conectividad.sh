@@ -20,7 +20,10 @@ declare -A IP=(
   [storage]=192.168.100.13
 )
 NODES=(control worker storage)
-SSH="ssh -o BatchMode=yes -o StrictHostKeyChecking=no -o ConnectTimeout=5 -i $HOME/.ssh/id_ed25519"
+# Las VMs son infraestructura desechable (se recrean seguido -> cambian de llave SSH).
+# En esta red privada interna no verificamos host keys.
+SSH="ssh -o BatchMode=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+     -o LogLevel=ERROR -o ConnectTimeout=5 -i $HOME/.ssh/id_ed25519"
 
 OUT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/resultado-conectividad.txt"
 exec > >(tee "$OUT") 2>&1

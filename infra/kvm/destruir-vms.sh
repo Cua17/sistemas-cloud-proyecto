@@ -15,6 +15,7 @@ grep -vE '^\s*#|^\s*$' "$CONF" | while read -r NAME IP RAM VCPUS DISK; do
   $VIRSH destroy "$NAME" 2>/dev/null || true          # apagar (forzado)
   $VIRSH undefine "$NAME" --nvram 2>/dev/null || true # borrar la definicion
   sudo rm -f "$IMGDIR/${NAME}.qcow2" "$IMGDIR/${NAME}-seed.iso"
+  ssh-keygen -R "$IP" >/dev/null 2>&1 || true         # olvidar la llave SSH de esa VM
 done
 
 echo
