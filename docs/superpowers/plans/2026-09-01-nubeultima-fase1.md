@@ -182,12 +182,16 @@ mínimo). En vez de instalar el SO a mano cada vez, Vagrant clona esta plantilla
 >
 > | Paso | Qué | Script / archivo | Estado |
 > |---|---|---|---|
-> | **1a** | Preparar el host: cgroups memory, `journald`→RAM, quitar swap de disco, `apt full-upgrade`, utilidades | `infra/pi-host/01-setup-host.sh` | ✅ hecho 2026-09-09 |
-> | **1b** | Instalar KVM + QEMU + libvirt; verificar `/dev/kvm`; crear la red virtual `nubeultima` 192.168.100.0/24 | `infra/pi-host/02-install-kvm.sh` + `nubeultima-net.xml` | en curso |
-> | **1c** | Crear las 3 VMs Debian 13 ARM64 con `virt-install` + cloud-init, IPs estáticas `.11/.12/.13` | `infra/kvm/crear-vms.sh` + `vms.conf` | pendiente |
-> | **1d** | Configuración base de las 3 VMs (paquetes, hora, `/etc/hosts`, SSH) | `infra/ansible/common.yml` + `inventory.ini` | pendiente |
-> | **1e** | Prueba de conectividad bidireccional (ping + iperf3) entre las 3 VMs | `pruebas/conectividad.sh` | pendiente |
-> | **1f** | Reconstrucción limpia: `destruir-vms.sh && crear-vms.sh` reproduce todo | `infra/kvm/destruir-vms.sh` | pendiente |
+> | **1a** | Preparar el host: cgroups memory, `journald`→RAM, quitar swap de disco, `apt full-upgrade`, utilidades | `infra/pi-host/01-setup-host.sh` | ✅ 2026-09-09 |
+> | **1b** | Instalar KVM + QEMU + libvirt; verificar `/dev/kvm`; crear la red virtual `nubeultima` 192.168.100.0/24 | `infra/pi-host/02-install-kvm.sh` + `nubeultima-net.xml` | ✅ 2026-09-09 |
+> | **1c** | Crear las 3 VMs Debian 13 ARM64 con `virt-install` + cloud-init, IPs estáticas `.11/.12/.13` | `infra/kvm/crear-vms.sh` + `vms.conf` | ✅ 2026-09-10 |
+> | **1d** | Configuración base de las 3 VMs (paquetes, hora, `/etc/hosts`, SSH) | `infra/ansible/common.yml` + `inventory.ini` | ✅ `ok=6 changed=4 failed=0` |
+> | **1e** | Prueba de conectividad bidireccional (ping + iperf3) entre las 3 VMs | `pruebas/conectividad.sh` | ✅ 0% pérdida, ~2 Gbit/s, jitter <0.1 ms |
+> | **1f** | Reconstrucción limpia: `destruir-vms.sh && crear-vms.sh` reproduce todo | `infra/kvm/destruir-vms.sh` | ✅ ciclo completo en ~6 min (crear-vms 85 s) |
+>
+> **✅ FASE 1 COMPLETA (2026-09-10).** Evidencia en `docs/informe/evidencias/`.
+> RAM de la Pi con las 3 VMs: ~3.0 GB usados / ~0.6 GB libres + 2 GB zram. Temp ~54 °C.
+> **Aviso:** en 4 GB la Fase 2 (Docker + Swarm + contenedores en las VMs) va a estar al límite.
 >
 > **Acceso:** la Pi es `nubeultima` (`192.168.0.51` en la red de casa, `nubeultima.local`).
 > Se administra por SSH desde la laptop con `~/.ssh/id_ed25519_nubeultima`. Las VMs
