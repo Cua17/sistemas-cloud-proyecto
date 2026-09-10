@@ -31,3 +31,6 @@ Thumbs.db
 
 # Presentaciones y PDFs pesados del curso (material de referencia, no del proyecto)
 *.pdf
+
+# Resultados generados (se copian a docs/informe/evidencias/ cuando se quieren guardar)
+pruebas/resultado-conectividad.txt
