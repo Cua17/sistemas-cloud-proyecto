@@ -1,0 +1,55 @@
+# Seguridad de red (Zero Trust / minimo privilegio): por defecto se niega todo el
+# trafico de entrada dentro del namespace, y se abren solo los caminos necesarios.
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  namespace: nubeultima
+spec:
+  podSelector: {}
+  policyTypes: [Ingress]
+---
+# El broker MQTT solo acepta conexiones de pods del mismo namespace.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: mqtt-broker-desde-namespace
+  namespace: nubeultima
+spec:
+  podSelector: { matchLabels: { app: mqtt-broker } }
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - namespaceSelector: { matchLabels: { kubernetes.io/metadata.name: nubeultima } }
+      ports:
+        - { protocol: TCP, port: 1883 }
+---
+# La API de ingestion solo la consume el dashboard (y sondas del kubelet).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: ingestion-api-desde-dashboard
+  namespace: nubeultima
+spec:
+  podSelector: { matchLabels: { app: ingestion-api } }
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: { matchLabels: { app: dashboard } }
+      ports:
+        - { protocol: TCP, port: 8000 }
+    - {}   # sondas de readiness del nodo
+---
+# El panel (SaaS) es lo unico accesible desde fuera del clúster (NodePort).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: dashboard-publico
+  namespace: nubeultima
+spec:
+  podSelector: { matchLabels: { app: dashboard } }
+  policyTypes: [Ingress]
+  ingress:
+    - ports:
+        - { protocol: TCP, port: 8080 }
