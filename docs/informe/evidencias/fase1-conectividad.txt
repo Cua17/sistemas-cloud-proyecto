@@ -1,0 +1,34 @@
+==================================================================
+ NubeUltima - Prueba de conectividad del centro de datos
+ Fecha: 2026-09-10 00:17:02 UTC   (host: nubeultima)
+==================================================================
+
+### 1. LATENCIA (ping, 10 paquetes por sentido) ###
+
+ORIGEN     DESTINO    PERDIDA          RTT prom    
+----------------------------------------------------
+control    worker     0% packet loss   0.684 ms    
+control    storage    0% packet loss   0.644 ms    
+worker     control    0% packet loss   0.594 ms    
+worker     storage    0% packet loss   0.642 ms    
+storage    control    0% packet loss   0.590 ms    
+storage    worker     0% packet loss   0.616 ms    
+
+### 2. ANCHO DE BANDA y JITTER (iperf3) ###
+
+-- Arrancando servidores iperf3 (daemon) en las 3 VMs --
+
+ORIGEN     DESTINO    TCP Bitrate      UDP Jitter  
+----------------------------------------------------
+control    worker     1951 Mbits/sec   0.078 ms    
+control    storage    2024 Mbits/sec   0.012 ms    
+worker     control    1949 Mbits/sec   0.094 ms    
+worker     storage    2067 Mbits/sec   0.010 ms    
+storage    control    1844 Mbits/sec   0.005 ms    
+storage    worker     1872 Mbits/sec   0.005 ms    
+
+-- Apagando servidores iperf3 --
+
+==================================================================
+ Fin. Resultado guardado en: /home/pi/nubeultima/pruebas/resultado-conectividad.txt
+==================================================================
