@@ -30,11 +30,12 @@ def base_reading(tipo: str, hour: float) -> float:
 
 
 def inject_anomaly(tipo: str, valor: float, kind: str) -> float:
-    """Deforma una lectura para simular una anomalia."""
+    """Deforma una lectura para simular una anomalia (valores claramente por
+    encima de los umbrales de las reglas, sin importar la hora)."""
     if kind == "fuga" and tipo == "agua":
-        return round(max(valor, 4.5), 2)          # flujo que no baja
+        return round(max(valor, 5.0), 2)          # flujo sostenido que no baja
     if kind == "pico" and tipo == "luz":
-        return round(valor * 4.0 + 1.0, 2)        # pico de consumo
+        return round(max(valor * 4.0, 3.5), 2)    # pico de consumo
     if kind == "contaminacion" and tipo == "aire":
-        return round(valor + 40.0, 2)             # episodio de mala calidad de aire
+        return round(max(valor, 10.0) + 40.0, 2)  # episodio de mala calidad de aire
     return valor

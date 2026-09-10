@@ -1,9 +1,12 @@
 """device-simulator - hace de medidores IoT de una ciudad y publica por MQTT.
 
 Representa la "ultima milla": dispositivos NB-IoT/LoRaWAN mandando telemetria.
-Config por variables de entorno (ver abajo). Publica en:
-    ciudad/{zona}/{tipo}/{device_id}
-con un JSON  {ts, device_id, zona, tipo, valor, unidad}
+Publica en  ciudad/{zona}/{tipo}/{device_id}  un JSON
+    {ts, device_id, zona, tipo, valor, unidad}
+
+Cada dispositivo puede entrar en estado "anomalo" durante varios ciclos seguidos
+(fuga de agua, pico de consumo, mala calidad de aire), asi las alertas aparecen
+de forma visible y sostenida en el panel.
 """
 import json
 import os
@@ -20,7 +23,8 @@ MQTT_PORT      = int(os.getenv("MQTT_PORT", "1883"))
 ZONAS         = os.getenv("ZONAS", "zona-1,zona-2,zona-3,zona-4").split(",")
 DEV_POR_ZONA  = int(os.getenv("DEVICES_POR_ZONA", "1"))
 INTERVALO     = int(os.getenv("INTERVALO_SEG", "15"))
-ANOMALIA_PROB = float(os.getenv("ANOMALIA_PROB", "0.03"))
+ANOMALIA_PROB = float(os.getenv("ANOMALIA_PROB", "0.06"))   # prob. de INICIAR una anomalia
+ANOMALIA_CICLOS = (3, 7)                                     # cuantos ciclos dura
 
 ANOMALIA_DE_TIPO = {"agua": "fuga", "luz": "pico", "aire": "contaminacion"}
 
@@ -30,12 +34,15 @@ def construir_dispositivos():
     for zona in ZONAS:
         for tipo in TIPOS:
             for i in range(DEV_POR_ZONA):
-                devs.append({"id": f"{tipo}-{zona}-{i + 1:02d}", "zona": zona, "tipo": tipo})
+                devs.append({
+                    "id": f"{tipo}-{zona}-{i + 1:02d}",
+                    "zona": zona, "tipo": tipo,
+                    "anomalo": 0,          # ciclos de anomalia que quedan
+                })
     return devs
 
 
 def conectar(cli):
-    """Reintenta hasta que el broker este disponible (el pod puede arrancar antes)."""
     while True:
         try:
             cli.connect(MQTT_HOST, MQTT_PORT, keepalive=60)
@@ -57,19 +64,21 @@ def main():
         ahora = datetime.now(timezone.utc)
         hour = ahora.hour + ahora.minute / 60.0
         for d in devices:
+            if d["anomalo"] == 0 and random.random() < ANOMALIA_PROB:
+                d["anomalo"] = random.randint(*ANOMALIA_CICLOS)
+                print(f"simulador: {d['id']} entra en anomalia ({d['anomalo']} ciclos)", flush=True)
+
             valor = base_reading(d["tipo"], hour)
-            if random.random() < ANOMALIA_PROB:
+            if d["anomalo"] > 0:
                 valor = inject_anomaly(d["tipo"], valor, ANOMALIA_DE_TIPO[d["tipo"]])
+                d["anomalo"] -= 1
+
             payload = {
                 "ts": ahora.isoformat(),
-                "device_id": d["id"],
-                "zona": d["zona"],
-                "tipo": d["tipo"],
-                "valor": valor,
-                "unidad": TIPOS[d["tipo"]]["unidad"],
+                "device_id": d["id"], "zona": d["zona"], "tipo": d["tipo"],
+                "valor": valor, "unidad": TIPOS[d["tipo"]]["unidad"],
             }
-            topic = f"ciudad/{d['zona']}/{d['tipo']}/{d['id']}"
-            cli.publish(topic, json.dumps(payload), qos=0)
+            cli.publish(f"ciudad/{d['zona']}/{d['tipo']}/{d['id']}", json.dumps(payload), qos=0)
         time.sleep(INTERVALO)
 
 
