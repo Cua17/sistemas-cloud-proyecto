@@ -25,7 +25,7 @@ spec:
             - { name: ZONAS,            value: "zona-1,zona-2,zona-3,zona-4" }
             - { name: DEVICES_POR_ZONA, value: "1" }
             - { name: INTERVALO_SEG,    value: "15" }
-            - { name: ANOMALIA_PROB,    value: "0.04" }
+            - { name: ANOMALIA_PROB,    value: "0.03" }
           resources:
             requests: { memory: "32Mi", cpu: "20m" }
             limits:   { memory: "64Mi" }

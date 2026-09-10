@@ -53,7 +53,7 @@
   </section>
 
   <section>
-    <h2>Alertas activas (últimas 2 h)</h2>
+    <h2>Alertas recientes</h2>
     <table class="alertas"><thead><tr><th>Regla</th><th>Dispositivo</th><th>Zona</th><th>Detalle</th><th>Hora</th></tr></thead>
       <tbody id="alertas"><tr><td colspan="5" class="vacio">Sin alertas</td></tr></tbody>
     </table>
@@ -76,7 +76,7 @@ async function get(path){ const r = await fetch('/api/'+path); if(!r.ok) throw n
 async function refrescar(){
   try{
     const [stats, zonas, alertas, devices] = await Promise.all(
-      [get('stats'), get('zonas'), get('alerts?minutos=120'), get('devices')]);
+      [get('stats'), get('zonas'), get('alerts?minutos=30'), get('devices')]);
 
     $('#stat').innerHTML =
       `<span>Lecturas: <b>${stats.lecturas}</b></span>
