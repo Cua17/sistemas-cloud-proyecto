@@ -138,7 +138,6 @@ story += [Spacer(1, 4*cm),
 port = tabla([
     [P("Curso", CELLB), P("Sistemas Cloud y Tecnologias de Ultima Milla (EHP 1)")],
     [P("Catedratico", CELLB), P("Sergio Saenz")],
-    [P("Repositorio", CELLB), P("github.com/Cua17/sistemas-cloud-proyecto (privado)")],
     [P("Hardware", CELLB), P("Raspberry Pi 4 (4 GB) + microSD 128 GB")],
 ], [3*cm, 12*cm], header=False)
 story += [port, Spacer(1, 1*cm)]
@@ -304,7 +303,7 @@ doc = BaseDocTemplate(OUT, pagesize=A4,
                       leftMargin=2*cm, rightMargin=2*cm,
                       topMargin=2*cm, bottomMargin=1.8*cm,
                       title="NubeUltima - Resumen del proyecto",
-                      author="Grupo NubeUltima")
+                      author="Grupo NubeUltima", creator="")
 frame = Frame(doc.leftMargin, doc.bottomMargin, doc.width, doc.height, id="f")
 doc.addPageTemplates([PageTemplate(id="main", frames=[frame], onPage=on_page)])
 doc.build([s for s in story if not (isinstance(s, Flowable) and type(s) is Flowable)])
