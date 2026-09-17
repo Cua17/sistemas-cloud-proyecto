@@ -50,11 +50,12 @@ def zonas():
                COUNT(DISTINCT r.device_id) AS dispositivos,
                (SELECT COUNT(*) FROM alerts a
                  WHERE a.zona = r.zona
-                   AND a.ts >= datetime('now', '-15 minutes')) AS alertas
+                   AND a.ts >= ?) AS alertas
         FROM readings r
         GROUP BY r.zona
         ORDER BY r.zona
-        """
+        """,
+        (_desde(15),),
     ).fetchall()
     conn.close()
     return [dict(x) for x in rows]

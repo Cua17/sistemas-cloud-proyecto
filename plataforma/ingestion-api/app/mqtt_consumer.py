@@ -4,6 +4,7 @@ import collections
 import json
 import os
 import threading
+from datetime import datetime, timedelta, timezone
 
 import paho.mqtt.client as mqtt
 
@@ -42,13 +43,20 @@ def _on_message(client, userdata, msg):
             (r["ts"], r["device_id"], r["zona"], r["tipo"], r["valor"], r["unidad"]),
         )
         _hist[r["device_id"]].append(r["valor"])
+        # Corte de 10 min calculado en Python (mismo formato ISO-8601 que la
+        # columna 'ts'): comparar contra datetime('now','-10 minutes') de SQLite
+        # directamente rompe la comparacion, porque esa funcion devuelve
+        # "YYYY-MM-DD HH:MM:SS" (con espacio) mientras 'ts' guarda formato ISO
+        # con 'T' y microsegundos - la comparacion de texto quedaba siempre
+        # verdadera y la de-duplicacion bloqueaba las alertas para siempre.
+        hace_10min = (datetime.now(timezone.utc) - timedelta(minutes=10)).isoformat()
         for regla, detalle in evaluar(r, list(_hist[r["device_id"]])):
             # De-duplicacion: una alerta por episodio. Si ya hay una del mismo
             # dispositivo y regla en los ultimos 10 min, no se repite.
             ya = conn.execute(
                 "SELECT 1 FROM alerts WHERE device_id=? AND regla=? "
-                "AND ts >= datetime('now','-10 minutes') LIMIT 1",
-                (r["device_id"], regla),
+                "AND ts >= ? LIMIT 1",
+                (r["device_id"], regla, hace_10min),
             ).fetchone()
             if ya:
                 continue
