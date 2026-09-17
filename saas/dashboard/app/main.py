@@ -28,12 +28,17 @@ PROMQL = {
 
 @app.get("/health")
 def health():
+    """Usado por el readinessProbe de Kubernetes para saber si el pod ya
+    esta listo para recibir trafico."""
     return {"status": "ok"}
 
 
 @app.get("/api/infra")
 async def infra():
-    """Monitoreo del hardware: CPU/RAM/disco/temperatura de la Pi y las 3 VMs."""
+    """Monitoreo del hardware: CPU/RAM/disco/temperatura de la Pi y las 3 VMs.
+    El navegador nunca habla directo con Prometheus - le pregunta a ESTE
+    endpoint, y este es el que hace las 4 consultas PromQL y devuelve todo
+    ya resumido y agrupado por maquina en un solo JSON."""
     out: dict = {}
     async with httpx.AsyncClient(timeout=5) as client:
         for metrica, q in PROMQL.items():
@@ -43,20 +48,31 @@ async def infra():
                     m = res["metric"].get("maquina", "?")
                     out.setdefault(m, {})[metrica] = round(float(res["value"][1]), 1)
             except Exception:
+                # Si Prometheus no responde a tiempo, se omite esa metrica en
+                # vez de romper toda la respuesta - el panel simplemente no
+                # muestra ese numero por esta vez.
                 pass
     return out
 
 
-# /api/baas y el resto de /api/* van al ingestion-api via el proxy de abajo.
+# /api/baas y el resto de /api/* (alerts, devices, zonas, readings, stats)
+# van al ingestion-api a traves del proxy generico de aca abajo - no hace
+# falta un endpoint propio para cada uno.
 
 
 @app.get("/", response_class=HTMLResponse)
 def index(request: Request):
+    """Sirve la pagina principal del panel (el HTML+JS que arma el navegador)."""
     return templates.TemplateResponse("index.html", {"request": request})
 
 
 @app.get("/api/{path:path}")
 async def proxy(path: str, request: Request):
+    """Proxy generico: todo lo que el navegador pide a /api/algo se reenvia
+    tal cual a http://ingestion-api:8000/algo (mismo path, mismos query
+    params) y se devuelve la respuesta. Asi el navegador SOLO le habla a
+    este servicio (el dashboard), nunca directo al ingestion-api - que
+    ademas tiene una NetworkPolicy que no lo dejaria de todas formas."""
     url = f"{INGESTION_API}/{path}"
     try:
         async with httpx.AsyncClient(timeout=5) as client:
